@@ -1,9 +1,9 @@
 # KnowMedicineAdm
 
-<h1>liblary</h1>
+<h2>liblary</h2>
 
 <div>
-pip install flask
-pip install flask_jwt_extended
-pip install ultralytics
+<p>pip install flask</p>
+<p>pip install flask_jwt_extended</p>
+<p>pip install ultralytics</p>
 </div>
