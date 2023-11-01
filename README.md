@@ -1,6 +1,6 @@
 # KnowMedicineAdm
 
-<h2>liblary</h2>
+<h2>library</h2>
 
 <div>
 <p>pip install flask</p>
