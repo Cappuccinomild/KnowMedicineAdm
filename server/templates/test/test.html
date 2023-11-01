@@ -1,0 +1,10 @@
+<!-- 질문 목록 -->
+{% if med_list %}
+    <ul>
+    {% for med in med_list %}
+        <li><a href="/detail/{{ med.MED_ID }}/">{{ med.Caution }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>질문이 없습니다.</p>
+{% endif %}

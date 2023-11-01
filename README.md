@@ -6,4 +6,5 @@
 <p>pip install flask</p>
 <p>pip install flask_jwt_extended</p>
 <p>pip install ultralytics</p>
+<p>pip install flask-migrate</p>
 </div>

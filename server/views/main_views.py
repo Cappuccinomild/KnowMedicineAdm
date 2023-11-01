@@ -1,4 +1,4 @@
-from flask import Flask
+
 from flask import request
 from flask import jsonify
 from flask import session
@@ -9,16 +9,23 @@ from flask import redirect, url_for, send_from_directory, render_template
 # JWT 확장 라이브러리
 from flask_jwt_extended import *
 
-import os
-
 import json
 import sqlite3
-from ultralytics import YOLO
+
+from PIL import Image
+
 import pandas as pd
 import numpy as np
 import datetime
 import cv2
+import os
+
+import sqlite3
 from PIL import Image
+
+from ultralytics import YOLO
+
+yolo_model = YOLO("../img_model.pt")
 
 def PIL2OpenCV(pil_image):
     
@@ -75,7 +82,7 @@ def get_medicine_data(label):
     label = label.replace(",)", ")")
     
     # in 연산을 이용해 검출된 모든 객체를 추출 할 수 있도록 함.
-    result = pd.read_sql_query("SELECT * FROM MEDICINE WHERE ID IN " + label, con)
+    result = pd.read_sql_query("SELECT * FROM MEDICINE WHERE MED_ID IN " + label, con)
 
     json_skeleton['medicine_list'] = result.to_dict(orient= "records")
 
@@ -111,19 +118,29 @@ def id_validation(id, pwd):
 
         cur = con.cursor()
 
-        cur.execute("SELECT * FROM USER WHERE ID = '" + id + "' AND Password = '" + pwd + "'")
+        cur.execute("SELECT * FROM USER WHERE USR_ID = '" + id + "' AND Password = '" + pwd + "'")
 
     return len(cur.fetchall())
 
-app = Flask(__name__)
 
-@app.route('/')
+from flask import Blueprint, render_template
+
+bp = Blueprint('conn', __name__, url_prefix='/')
+
+from server.models import Medicine
+
+@bp.route('/')
+def index():
+    med_list = Medicine.query.order_by(Medicine.MED_ID.desc())
+    return render_template('test/test.html', med_list=med_list)
+
+@bp.route('/')
 def hello_world():
     return 'Hello World!'
 
 # ID pwd를 검증한 후 200 코드 return
 # JWT를 이용해 토큰 전달
-@app.route('/login', methods = ['POST'])
+@bp.route('/login', methods = ['POST'])
 def ID_json_handler():
 
     # 유저 json 입력을 parsing 함
@@ -157,7 +174,7 @@ def ID_json_handler():
         return make_response(jsonify({"resp": 'not allowed'}), 404)
 
 # 200 코드 return 후 session release 기능을 구현 예정
-@app.route('/logout', methods = ['POST'])
+@bp.route('/logout', methods = ['POST'])
 def logout_json_handler():
 
     print (request.is_json)
@@ -167,7 +184,7 @@ def logout_json_handler():
     return make_response(jsonify({"resp": "logout_success"}), 200)
 
 # 객체 인식 및 결과 전송
-@app.route('/photo', methods = ['POST'])
+@bp.route('/photo', methods = ['POST'])
 @jwt_required()
 def photo_json_handler():
     
@@ -207,7 +224,7 @@ def photo_json_handler():
     return make_response(yolo_result, 200)
 
 # 회원가입 링크
-@app.route('/signup', methods = ['POST'])
+@bp.route('/signup', methods = ['POST'])
 def signup_json_handler():
 
     # 유저 json 입력을 parsing 함
@@ -225,7 +242,7 @@ def signup_json_handler():
         cur = con.cursor()
 
         # 중복 ID 확인
-        cur.execute("SELECT * FROM USER WHERE ID = '" + user_id + "'")
+        cur.execute("SELECT * FROM USER WHERE USR_ID = '" + user_id + "'")
 
         validation_flag = len(cur.fetchall())
 
@@ -255,7 +272,7 @@ def signup_json_handler():
         return make_response(jsonify({"resp": 'not allowed'}), 401)
 
 # 회원가입 링크
-@app.route('/idValidation', methods = ['POST'])
+@bp.route('/idValidation', methods = ['POST'])
 def is_valid_id():
 
     # 유저 json 입력을 parsing 함
@@ -270,7 +287,7 @@ def is_valid_id():
             cur = con.cursor()
 
             # 중복 ID 확인
-            cur.execute("SELECT * FROM USER WHERE ID = '" + user_id + "'")
+            cur.execute("SELECT * FROM USER WHERE USR_ID = '" + user_id + "'")
 
             validation_flag = len(cur.fetchall())
 
@@ -290,26 +307,6 @@ def is_valid_id():
 
 
 # function test site
-@app.route('/test', methods = ['POST'])
+@bp.route('/test', methods = ['POST'])
 def test():
     return "test"
-
-if __name__ == "__main__":
-
-    yolo_model = YOLO("img_model.pt")
-    
-    app.config['JSON_AS_ASCII'] = False
-
-    # JWT토큰 추가
-    app.config.update(
-        DEBUG = True,
-        JWT_SECRET_KEY = "SILLA1234@"
-    )
-    
-    # JWT 확장 모듈을 flask 어플리케이션에 등록
-    jwt = JWTManager(app)
-
-    app.run(host='192.168.55.39', port= 8000)
-    
-    
-    
