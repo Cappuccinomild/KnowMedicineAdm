@@ -2,7 +2,7 @@
 {% if med_list %}
     <ul>
     {% for med in med_list %}
-        <li><a href="/detail/{{ med.MED_ID }}/">{{ med.Caution }}</a></li>
+        <li><a href="/detail/{{ med.med_id }}/">{{ med.caution }}</a></li>
     {% endfor %}
     </ul>
 {% else %}

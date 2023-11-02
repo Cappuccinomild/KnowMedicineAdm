@@ -82,7 +82,7 @@ def get_medicine_data(label):
     label = label.replace(",)", ")")
     
     # in 연산을 이용해 검출된 모든 객체를 추출 할 수 있도록 함.
-    result = pd.read_sql_query("SELECT * FROM MEDICINE WHERE MED_ID IN " + label, con)
+    result = pd.read_sql_query("SELECT * FROM MEDICINE WHERE med_id IN " + label, con)
 
     json_skeleton['medicine_list'] = result.to_dict(orient= "records")
 
@@ -118,7 +118,7 @@ def id_validation(id, pwd):
 
         cur = con.cursor()
 
-        cur.execute("SELECT * FROM USER WHERE USR_ID = '" + id + "' AND Password = '" + pwd + "'")
+        cur.execute("SELECT * FROM USER WHERE user_id = '" + id + "' AND Password = '" + pwd + "'")
 
     return len(cur.fetchall())
 
@@ -131,7 +131,7 @@ from server.models import Medicine
 
 @bp.route('/')
 def index():
-    med_list = Medicine.query.order_by(Medicine.MED_ID.desc())
+    med_list = Medicine.query.order_by(Medicine.med_id.desc())
     return render_template('test/test.html', med_list=med_list)
 
 @bp.route('/')
@@ -242,7 +242,7 @@ def signup_json_handler():
         cur = con.cursor()
 
         # 중복 ID 확인
-        cur.execute("SELECT * FROM USER WHERE USR_ID = '" + user_id + "'")
+        cur.execute("SELECT * FROM USER WHERE user_id = '" + user_id + "'")
 
         validation_flag = len(cur.fetchall())
 
@@ -287,7 +287,7 @@ def is_valid_id():
             cur = con.cursor()
 
             # 중복 ID 확인
-            cur.execute("SELECT * FROM USER WHERE USR_ID = '" + user_id + "'")
+            cur.execute("SELECT * FROM USER WHERE user_id = '" + user_id + "'")
 
             validation_flag = len(cur.fetchall())
 
