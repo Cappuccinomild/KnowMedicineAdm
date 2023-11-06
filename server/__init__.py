@@ -35,6 +35,9 @@ def create_app():
     from .views import main_views
     app.register_blueprint(main_views.bp)
 
+    from .views import api_views
+    app.register_blueprint(api_views.bp)
+
     # app.run(host='192.168.55.39', port= 8000)
     return app
         
