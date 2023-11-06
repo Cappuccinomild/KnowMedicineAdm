@@ -174,3 +174,5 @@ test_py/
 # excel
 *.xlsx
 
+# migrations
+migrations/
