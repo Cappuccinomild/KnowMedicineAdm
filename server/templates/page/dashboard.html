@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="border-bottom py-3">대시보드</h2>
+
+<div class="p-3 border">
+    <div class="row">
+        <div class="col border">
+            ▶ 모델별 평균 정확도
+            <canvas id="avg_acc"></canvas>
+        </div>
+        <div class="col border">
+            ▶ 태그 데이터 비율
+            <canvas id="tag_ratio"></canvas>
+        </div>
+        <div class="col border">
+            ▶ 일일 사용량
+            <canvas id="daily_usage"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col border">
+            ▶ 의약품별 보유 이미지
+            <canvas id="med_img"></canvas>
+        </div>
+        <div class="col border">
+            ▶ 월별 사용량
+            <canvas id="monthly_usage"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<script type="text/javascript">
+    const avg_acc = document.getElementById('avg_acc');
+    const tag_ratio = document.getElementById('tag_ratio');
+    const daily_usage = document.getElementById('daily_usage');
+    const med_img = document.getElementById('med_img');
+    const monthly_usage = document.getElementById('monthly_usage')
+
+    new Chart(avg_acc, {
+        type: 'bar',
+        data: {
+            labels: ['모델1', '모델2', '모델3'],
+            datasets: [{
+                label: 'accuracy(%)',
+                data: [70, 88, 64],
+            }]
+        },
+        options: {
+            maxBarThickness: 50,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+        },
+
+    });
+
+    new Chart(tag_ratio, {
+        type: 'doughnut',
+        data: {
+            labels: ['태그 데이터', '미태그 데이터'],
+            datasets: [{
+                data: [20, 80],
+            }]
+        },
+    });
+
+    new Chart(daily_usage, {
+        type: 'line',
+        data: {
+            labels: ['2023-11-01', '2023-11-02', '2023-11-03', '2023-11-04'],
+            datasets: [{
+                label: '일일 사용량',
+                data: [10, 70, 50, 60],
+                fill: true,
+
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                }
+            }
+        }
+    });
+
+    new Chart(med_img, {
+        type: 'bar',
+        data: {
+            labels: ['음성', '양성', '뒷면', '타이레놀', '캐롤비', '래피콜콜드', '이지엔', '베아제'],
+            datasets: [{
+                label: '개',
+                data: [120, 133, 500, 679, 467, 542, 134, 552, 164],
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    new Chart(monthly_usage, {
+        type: 'line',
+        data: {
+            labels: ['9', '10', '11', '12'],
+            datasets: [{
+                label: '월별 사용량',
+                data: [460, 640, 359, 679],
+                fill: true,
+
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                }
+            }
+        }
+    });
+
+
+</script>
+{% endblock %}

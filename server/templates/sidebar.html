@@ -1,0 +1,47 @@
+<!-- Sidebar  -->
+<div class="d-flex flex-column p-3 text-white bg-dark" style="min-height: 100vh; height:auto; width:300px; ">
+    <!-- 아이콘과 로고 -->
+    <a href="#" class="p-3 d-flex align-items-center mb-10 mb-md-0 me-md-auto text-white text-decoration-none">
+        <!-- 아이콘(svg 태그로 넣기) -->
+        <span class="fs-4">KnowMedicine</span>
+    </a>
+    <div class="mb-3 p-3">
+        {% if g.user %}
+        관리자 : {{ g.user.user_id }}
+        <a href="#" class="ms-3">로그아웃</a>
+        {% endif %}
+    </div>
+    <ul class="nav nav-pills flex-column mb-auto">
+        <!-- 메뉴 항목 -->
+        <li class="nav-item">
+            <a href="#" class="nav-link active" aria-current="page">
+                대시보드
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white">
+                의약품 관리
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white">
+                유저 관리
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white">
+                분석 로그
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white">
+                데이터 학습
+            </a>
+        </li>
+        <li>
+            <a href="#" class="nav-link text-white">
+                데이터 태깅
+            </a>
+        </li>
+    </ul>
+</div>

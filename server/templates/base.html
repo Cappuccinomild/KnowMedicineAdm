@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+
+
+    <!-- pybo CSS -->
+    <!--
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    -->
+
+    <title>KnowMedicine 관리자 시스템</title>
+</head>
+
+<body>
+
+
+
+    <div class="row">
+        {% include "sidebar.html" %}
+
+        <div class="col">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+
+
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='bootstrap.min.js') }}">
+    </script>
+
+    <!-- Chart.js -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script> -->
+    
+    <!-- 자바스크립트 Start -->
+    {% block script %}
+    {% endblock %}
+    <!-- 자바스크립트 End -->
+
+</body>
+
+</html>
