@@ -24,13 +24,14 @@ def PIL2OpenCV(pil_image):
     
     return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
+# 이미지 분석, 로그저장
 def yolo_img_predict(id, img):
     
     yolo_model = YOLO("../img_model.pt")
 
     results = yolo_model(img)
 
-    from server.models import ID_seq, Img_set, Tag_set
+    from server.models import ID_seq, Img_set, Tag_set, Medicine
     
     image_data = {}
     
@@ -76,23 +77,23 @@ def yolo_img_predict(id, img):
 
     low_accuracy = []
 
-    
-
     for rate, label, xyxy in zip(correct_rate, label, bbox_xyxy):
         
         start_x, start_y, end_x, end_y = xyxy
         # init tag data
         tag_data = {}
-
+        print(str(int(label.item())))
         tag_data['tag_id'] = ID_seq.call_ID('TAG')
         tag_data['img_id'] = image_data['img_id']
-        tag_data['rate'] = rate
+        tag_data['med_id'] = Medicine.query.filter(Medicine.class_id == str(int(label.item()))).first().med_id
+        tag_data['rate'] = rate.item()
         tag_data['start_x'] = start_x
         tag_data['start_y'] = start_y
         tag_data['end_x'] = end_x
         tag_data['end_y'] = end_y
 
         print(tag_data)
+        # save tag data to db
         Tag_set.add_tag(**tag_data)
 
         if rate >= 0.8:
@@ -102,8 +103,9 @@ def yolo_img_predict(id, img):
         else:
             low_accuracy.append([rate, label])
 
-    return rate_list, label_list, low_accuracy, im
+    return rate_list, label_list, low_accuracy, img
 
+# 라벨 명을 이용한 의약품 리스트 추출
 def get_medicine_data(label):
 
     json_skeleton = {
@@ -126,28 +128,6 @@ def get_medicine_data(label):
     json_skeleton['medicine_list'] = medicine_list
 
     return json_skeleton
-
-def save_nonelabel(id, img, low_accuracy, res_img):
-    
-    path_month = datetime.datetime.now().strftime('%Y%m')
-    fname_time = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-
-    path = './image/none_labeled/'+ path_month
-
-    res_path = './image/none_labeled_result/'+ path_month
-
-    fname = "_".join([id, fname_time])
-
-    fname += ".png"
-
-    os.makedirs(path,exist_ok=True)
-    os.makedirs(res_path,exist_ok=True)
-
-    print(path)
-    print(fname)
-
-    cv2.imwrite(path + "/" + fname, img)
-    cv2.imwrite(res_path + "/" + fname, res_img)
 
 from flask import Blueprint, render_template
 
@@ -223,7 +203,9 @@ def photo_json_handler():
     res_img = PIL2OpenCV(res_img)
 
     yolo_result = get_medicine_data(tuple(map(int, label)))
-
+    
+    '''
+    # 이전 미검출 데이터 저장코드
     # 검출 데이터 확인 여부
     item_len = len(yolo_result['medicine_list'])
 
@@ -231,6 +213,7 @@ def photo_json_handler():
     print("low", len(low_accuracy))
     if item_len == 0 or len(low_accuracy) != 0:
         save_nonelabel(user_id, photo, low_accuracy, res_img)
+    '''
     
     # 검출된 데이터가 없다면 빈 "medicine_list"를 전송하고
     # 클라이언트 단에서 처리 할 수 있도록 함.

@@ -33,12 +33,6 @@ class User(db.Model):
 
         return len(user)
 
-class User_log(db.Model):
-    user_log_id = db.Column(db.String(12), primary_key=True, comment = "사진 전송 로그 ID")
-    user_id = db.Column(db.String(12), nullable=False, comment = "유저 ID")
-    img_id = db.Column(db.String(12), nullable=False, comment = "이미지 ID")
-    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, comment = "전송날짜")
-
 class Check_log(db.Model):
     check_log_id = db.Column(db.String(12), primary_key=True, comment = "사진 분석 로그 ID")
     user_log_id = db.Column(db.String(12), nullable=False, comment = "사진 전송 로그 ID")
