@@ -20,19 +20,19 @@
 
 <body>
     <div class="container my-5">
-        <h5 class="my-3 border-bottom pb-2">로그인</h5>
+        <h5 class="my-3 border-bottom pb-2 fw-bold">로그인</h5>
         <form method="post">
             {{ form.csrf_token }}
             {% include "form_errors.html" %}
             <div class="mb-3">
                 <label for="username">아이디</label>
-                <input type="text" class="form-control" name="user_id" id="user_id" value="{{ form.user_id.data or '' }}">
+                <input type="text" class="form-control w-50" name="user_id" id="user_id" value="{{ form.user_id.data or '' }}">
             </div>
             <div class="mb-3">
                 <label for="password">비밀번호</label>
-                <input type="password" class="form-control" name="password" id="password" value="{{ form.password.data or '' }}">
+                <input type="password" class="form-control w-50" name="password" id="password" value="{{ form.password.data or '' }}">
             </div>
-            <button type="submit" class="btn btn-primary">로그인</button>
+            <button type="submit" class="btn btn-primary mb-3">로그인</button>
         </form>
 
         <a href="{{ url_for('auth.signup') }}">테스트 계정 생성</a>

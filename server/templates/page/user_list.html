@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="border-bottom py-3 m-3">유저 관리</h2>
+
+<!-- 검색 -->
+<div class="row">
+    <div class="col-5 input-group mb-3">
+        <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
+        <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>
+        </div>
+    </div>
+
+    <div class="col-7">
+        sadf
+    </div>
+</div>
+
+<div class="py-3 m-3">
+    <div class="row">
+        <div class="col-5 p-3">
+
+            <!-- 유저 목록 -->
+            <table class="table table-hover">
+                <thead>
+                    <tr class="text-center table-primary">
+                        <th>번호</th>
+                        <th>아이디</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% if user_list.total > 0 %}
+                    {% for user in user_list.items %}
+                    <tr class="text-center" data-userId="{{ user.user_id }}">
+                        <td>{{ loop.index0 + 1 + (user_list.page - 1) * user_list.per_page }}</td>
+                        <td class="text-center">{{ user.user_id }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="2" class="text-center">회원 정보가 없습니다.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+            <!-- 페이징 -->
+            <ul class="pagination justify-content-center mt-5">
+                <!-- 이전 페이지 -->
+                {% if user_list.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" data-page="{{ user_list.prev_num }}" href="javascript:void(0)">이전</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" tabindex="-1" aria-disabled="true" href="javascript:void(0)">이전</a>
+                </li>
+                {% endif %}
+
+                <!-- 숫자 페이지 -->
+                {% for page_num in user_list.iter_pages() %}
+                {% if page_num %}
+                {% if page_num != user_list.page %}
+                <li class="page-item">
+                    <a class="page-link" data-page="{{ page_num }}" href="javascript:void(0)">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="#">{{ page_num }}</a>
+                </li>
+                {% endif %}
+                {% else %}
+                <li class="disabled">
+                    <a class="page-link" href="javascript:void(0)">...</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                <!-- 다음 페이지 -->
+                {% if user_list.has_next %}
+                <li class="page-item">
+                    <a class="page-link" data-page="{{ user_list.next_num }}" href="javascript:void(0)">다음</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" tabindex="-1" aria-disabled="true" href="javascript:void(0)">다음</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+
+
+</div>
+
+
+<!-- 검색 폼 -->
+<form id="searchForm" method="get" action="{{ url_for('page.user_list') }}">
+    <input type="hidden" id="kw" name="kw" value="{{ kw or '' }}">
+    <input type="hidden" id="page" name="page" value="{{ page }}">
+</form>
+
+{% endblock %}
+{% block script %}
+<script type="text/javascript">
+
+    /* 페이징 */
+    const page_elements = document.getElementsByClassName("page-link");
+    Array.from(page_elements).forEach(function (element) {
+        element.addEventListener('click', function () {
+            document.getElementById('page').value = this.dataset.page;
+            document.getElementById('searchForm').submit();
+        });
+    });
+
+    /* 검색 */
+    const btn_search = document.getElementById("btn_search");
+    btn_search.addEventListener('click', function () {
+        document.getElementById('kw').value = document.getElementById('search_kw').value;
+        document.getElementById('page').value = 1; // 검색 시 1페이지부터 조회
+        document.getElementById('searchForm').submit();
+    })
+
+    const search_kw = document.getElementById("search_kw");
+    search_kw.addEventListener('keyup', function (event) {
+        if (event.key === "Enter") {
+            document.getElementById('kw').value = search_kw.value;
+            document.getElementById('page').value = 1; // 검색 시 1페이지부터 조회
+            document.getElementById('searchForm').submit();
+        }
+    });
+
+</script>
+{% endblock %}

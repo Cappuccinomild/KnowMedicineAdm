@@ -8,23 +8,23 @@
     <div class="mb-3 p-3">
         {% if g.user %}
         관리자 : {{ g.user.user_id }}
-        <a href="#" class="ms-3">로그아웃</a>
+        <a href="{{ url_for('auth.logout') }}" class="ms-3">로그아웃</a>
         {% endif %}
     </div>
     <ul class="nav nav-pills flex-column mb-auto">
         <!-- 메뉴 항목 -->
         <li class="nav-item">
-            <a href="#" class="nav-link active" aria-current="page">
+            <a href="{{ url_for('page.dashboard') }}" class="nav-link {% if current_menu == 'dashboard' %} active {% else %} text-white {% endif %}" aria-current="page">
                 대시보드
             </a>
         </li>
         <li>
-            <a href="#" class="nav-link text-white">
+            <a href="{{ url_for('page.medicine_list') }}" class="nav-link {% if current_menu == 'medicine_list' %} active {% else %} text-white {% endif %}">
                 의약품 관리
             </a>
         </li>
         <li>
-            <a href="#" class="nav-link text-white">
+            <a href="{{ url_for('page.user_list') }}" class="nav-link {% if current_menu == 'user_list' %} active {% else %} text-white {% endif %}">
                 유저 관리
             </a>
         </li>
