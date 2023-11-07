@@ -175,4 +175,4 @@ test_py/
 *.xlsx
 
 # migrations
-migrations/
+# migrations/
