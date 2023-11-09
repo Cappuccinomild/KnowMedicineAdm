@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 
 from server import db
+from server.forms import UserCreateForm, UserDetailForm
 from server.models import Medicine, User
 from server.views.auth_views import login_required
 
@@ -20,6 +21,7 @@ def dashboard():
 @bp.route("/medicine_list/")
 @login_required
 def medicine_list():
+    
     page = request.args.get("page", type=int, default=1)
     kw = request.args.get("kw", type=str, default="")
     medicine_list = Medicine.query.order_by(Medicine.name)
@@ -60,3 +62,55 @@ def user_list():
         
     user_list = user_list.paginate(page=page, per_page=10)
     return render_template("page/user_list.html", current_menu="user_list", user_list=user_list, page=page, kw=kw)
+
+
+@bp.route("/user_create/", methods=('GET', 'POST'))
+@login_required
+def user_create():
+    form = UserCreateForm()
+    
+    print(form.name.data)
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        user = User.query.filter_by(user_id=form.user_id.data).first()
+        if not user:
+            user = User(user_id=form.user_id.data,
+                        password=generate_password_hash(form.password1.data),
+                        name=form.name.data,
+                        birthday=form.birthday.data,
+                        gender=form.gender.data,
+                        phone=form.phone.data)
+            db.session.add(user)
+            db.session.commit()
+            return redirect(url_for('page.user_list'))
+        else:
+            flash('이미 존재하는 사용자입니다.')
+    
+    return render_template('page/user_create.html', current_menu="user_list", form=form)
+
+
+@bp.route('/user_modify/<string:user_id>', methods=('GET', 'POST'))
+@login_required
+def user_modify(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    if request.method == 'POST':
+        form = UserDetailForm()
+        if form.validate_on_submit():
+            form.populate_obj(user)
+            db.session.commit()
+            return redirect(url_for('page.user_list'))
+    else:
+        print(user.birthday)
+        form = UserDetailForm(obj=user)
+        
+    return render_template('page/user_modify.html', current_menu="user_list", form=form)
+
+
+@bp.route('/user_delete/<string:user_id>')
+@login_required
+def user_delete(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    return redirect(url_for('page.user_list'))

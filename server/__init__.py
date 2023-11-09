@@ -31,10 +31,15 @@ def create_app():
 
     from .views import main_views, auth_views, page_views, api_views
     
+    # 블루프린트
     app.register_blueprint(api_views.bp)
     app.register_blueprint(main_views.bp)
     app.register_blueprint(auth_views.bp)
     app.register_blueprint(page_views.bp)
+    
+    # 필터
+    from .filter import format_datetime
+    app.jinja_env.filters['birthday'] = format_datetime
 
     # app.run(host='192.168.55.39', port= 8000)
-    return app        
+    return app

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="border-bottom py-3 m-3">유저 등록</h2>
+
+<div class="container">
+    <form method="post" class="my-5">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+
+        <div class="row mb-3">
+            <label for="user_id" class="col-auto col-form-label">아이디</label>
+            <div class="col">
+                <input type="text" class="form-control" name="user_id" id="user_id" value="{{ form.user_id.data or '' }}">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label for="password1" class="col-auto col-form-label">비밀번호</label>
+            <div class="col">
+                <input type="password" class="form-control" name="password1" id="password1" value="{{ form.password1.data or '' }}">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label for="password2" class="col-auto col-form-label">비밀번호 확인</label>
+            <div class="col">
+                <input type="password" class="form-control" name="password2" id="password2" value="{{ form.password2.data or '' }}">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label for="name" class="col-auto col-form-label">이름</label>
+            <div class="col">
+                <input type="text" class="form-control" name="name" id="name" value="{{ form.name.data or '' }}">
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <label for="birthday" class="col-auto col-form-label">생년월일</label>
+            <div class="col">
+                <input type="date" class="form-control" name="birthday" id="birthday" value="{{ form.birthday.data or '' }}">
+            </div>
+        </div>
+
+
+            <!--
+            <label for="gender">성별</label>
+            <input type="text" class="form-control" name="gender" id="gender" value="{{ form.gender.data or '' }}">
+            -->
+
+        <div class="row mb-3">
+            <label class="col-auto col-form-label">성별</label>
+            <div class="col-auto">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="gender" id="male" value="남성" {% if form.gender.data != '여성' %} checked {% endif %}>
+                    <label class="form-check-label" for="male">남성</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="gender" id="female" value="여성" {% if form.gender.data == '여성' %} checked {% endif %}>
+                    <label class="form-check-label" for="female">여성</label>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <label for="phone" class="col-auto col-form-label">전화번호</label>
+            <div class="col">
+                <input type="text" class="form-control" name="phone" id="phone" value="{{ form.phone.data or '' }}">
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <button type="submit" class="btn btn-primary">등록</button>
+            <a href="{{ url_for('page.user_list') }} " class="btn btn-secondary">취소</a>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const labels = document.querySelectorAll('.col-form-label');
+    let maxLabelWidth = 0;
+
+    labels.forEach(label => {
+        const labelWidth = label.offsetWidth;
+        if(labelWidth > maxLabelWidth) {
+            maxLabelWidth = labelWidth;
+        }
+    });
+
+    labels.forEach(label => {
+        label.style.width = maxLabelWidth + 'px';
+    })
+</script>
+{% endblock %}
