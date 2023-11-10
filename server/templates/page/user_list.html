@@ -78,8 +78,12 @@
                             {% endif %} 
                         </td>
                         <td>
-                            <a href="{{ url_for('page.user_modify', user_id=user.user_id) }}" class="btn btn-outline-dark btn-sm">수정</a>
-                            <a href="javascript:void(0)" class="delete btn btn-outline-danger btn-sm" data-uri="{{ url_for('page.user_delete', user_id=user.user_id) }}">삭제</a>
+                            <a href="{{ url_for('page.user_modify', user_id=user.user_id) }}" class="btn btn-outline-dark btn-sm">
+                                <i class="bi bi-pencil-fill me-1"></i>수정
+                            </a>
+                            <a href="javascript:void(0)" class="delete btn btn-outline-danger btn-sm" data-uri="{{ url_for('page.user_delete', user_id=user.user_id) }}">
+                                <i class="bi bi-x-lg me-1"></i>삭제
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

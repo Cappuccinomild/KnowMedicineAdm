@@ -2,46 +2,64 @@
 <div class="d-flex flex-column p-3 text-white bg-dark" style="min-height: 100vh; height:auto; width:300px; ">
     <!-- 아이콘과 로고 -->
     <a href="#" class="p-3 d-flex align-items-center mb-10 mb-md-0 me-md-auto text-white text-decoration-none">
-        <!-- 아이콘(svg 태그로 넣기) -->
-        <span class="fs-4">KnowMedicine</span>
+        <span class="fs-4">
+            <i class="bi bi-capsule me-2"></i>KnowMedicine
+        </span>
     </a>
     <div class="mb-3 p-3">
         {% if g.user %}
         관리자 : {{ g.user.user_id }}
-        <a href="{{ url_for('auth.logout') }}" class="ms-3">로그아웃</a>
+        <a href="javascript:void(0)" data-uri="{{ url_for('auth.logout') }}" class="logout ms-3">
+            로그아웃
+        </a>
         {% endif %}
     </div>
     <ul class="nav nav-pills flex-column mb-auto">
         <!-- 메뉴 항목 -->
         <li class="nav-item">
+
             <a href="{{ url_for('page.dashboard') }}" class="nav-link {% if current_menu == 'dashboard' %} active {% else %} text-white {% endif %}" aria-current="page">
-                대시보드
+                <i class="bi bi-speedometer2 me-2"></i>대시보드
             </a>
         </li>
         <li>
             <a href="{{ url_for('page.medicine_list') }}" class="nav-link {% if current_menu == 'medicine_list' %} active {% else %} text-white {% endif %}">
-                의약품 관리
+                <i class="bi bi-prescription2 me-2"></i>의약품 관리
             </a>
         </li>
         <li>
             <a href="{{ url_for('page.user_list') }}" class="nav-link {% if current_menu == 'user_list' %} active {% else %} text-white {% endif %}">
-                유저 관리
+                <i class="bi bi-person-fill me-2"></i>유저 관리
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('page.analysis_log') }}" class="nav-link {% if current_menu == 'analysis_log' %} active {% else %} text-white {% endif %}">
+                <i class="bi bi-file-earmark-text me-2"></i>분석 로그
             </a>
         </li>
         <li>
             <a href="#" class="nav-link text-white">
-                분석 로그
+                <i class="bi bi-gear-wide-connected me-2"></i>데이터 학습
             </a>
         </li>
         <li>
             <a href="#" class="nav-link text-white">
-                데이터 학습
-            </a>
-        </li>
-        <li>
-            <a href="#" class="nav-link text-white">
-                데이터 태깅
+                <i class="bi bi-tags-fill me-2"></i>데이터 태깅
             </a>
         </li>
     </ul>
 </div>
+
+<script type="text/javascript">
+
+    /* 로그아웃 확인 */
+    const logout_elements = document.getElementsByClassName("logout");
+    Array.from(logout_elements).forEach(function(element) {
+        element.addEventListener('click', function() {
+            if(confirm("로그아웃 하시겠습니까?")) {
+                location.href = this.dataset.uri;
+            }
+        });
+    });
+
+</script>

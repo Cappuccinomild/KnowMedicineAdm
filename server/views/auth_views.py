@@ -15,8 +15,6 @@ def login():
     form = UserLoginForm()
 
     if request.method == "POST" and form.validate_on_submit():
-        # print(form.password.data)  #
-
         error = None
         user = User.query.filter_by(user_id=form.user_id.data).first()
         if not user:

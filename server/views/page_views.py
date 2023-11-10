@@ -4,7 +4,7 @@ from werkzeug.utils import redirect
 
 from server import db
 from server.forms import UserCreateForm, UserDetailForm
-from server.models import Medicine, User
+from server.models import Medicine, User, Check_log
 from server.views.auth_views import login_required
 
 bp = Blueprint("page", __name__, url_prefix="/page")
@@ -69,8 +69,6 @@ def user_list():
 def user_create():
     form = UserCreateForm()
     
-    print(form.name.data)
-    
     if request.method == 'POST' and form.validate_on_submit():
         user = User.query.filter_by(user_id=form.user_id.data).first()
         if not user:
@@ -101,7 +99,6 @@ def user_modify(user_id):
             db.session.commit()
             return redirect(url_for('page.user_list'))
     else:
-        print(user.birthday)
         form = UserDetailForm(obj=user)
         
     return render_template('page/user_modify.html', current_menu="user_list", form=form)
@@ -114,3 +111,22 @@ def user_delete(user_id):
     db.session.delete(user)
     db.session.commit()
     return redirect(url_for('page.user_list'))
+
+
+@bp.route('/analysis_log/')
+@login_required
+def analysis_log():
+    
+    page = request.args.get("page", type=int, default=1)
+    kw = request.args.get("kw", type=str, default="")
+    
+    # TODO: DB에서 분석 로그 데이터 받아오기
+    log_list = Check_log.query.order_by(Check_log.check_log_id)
+
+    if kw:
+        search = "%%{}%%".format(kw)
+        log_list = log_list.filter(Check_log.check_log_id.ilike(search))
+        
+    log_list = log_list.paginate(page=page, per_page=10)
+
+    return render_template("page/analysis_log.html", current_menu="analysis_log", log_list=log_list, page=page, kw=kw) 

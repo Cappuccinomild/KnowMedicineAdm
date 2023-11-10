@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="border-bottom py-3 m-3">분석 로그</h2>
+
+<div class="py-3 m-3">
+    <div class="row p-3">
+        <div class="col-5 p-3">
+            <!-- 검색 -->
+            <div class="input-group mb-3">
+                <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or '' }}">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>
+                </div>
+            </div>
+
+            <!-- 로그 목록 -->
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr class="text-center table-primary">
+                        <th>번호</th>
+                        <th>ID</th>
+                        <th>일시</th>
+                        <th>추측 약품</th>
+                        <th>정확도</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% if log_list.total > 0 %}
+                    {% for log in log_list.items %}
+                    <tr class="text-center" data-checkLogId="{{ log.check_log_id }}">
+                        <td>{{ loop.index0 + 1 + (log_list.page - 1) * log_list.per_page }}</td>
+                        <td class="text-center">( 사진 전송자 ID )</td>
+                        <td>( 날짜 )</td>
+                        <td>( 추측 약품 )</td>
+                        <td>( 정확도 )</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">분석 로그 정보가 없습니다.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 로그 상세 정보 -->
+        <div class="col-6 container border p-3">
+            <div class="mb-3">
+                ( 사진 )
+            </div>
+        </div>
+    </div>
+
+    <!-- 페이징 -->
+    <ul class="pagination justify-content-center mt-5">
+        <!-- 이전 페이지 -->
+        {% if log_list.has_prev %}
+        <li class="page-item">
+            <a class="page-link" data-page="{{ log_list.prev_num }}" href="javascript:void(0)">이전</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="javascript:void(0)">이전</a>
+        </li>
+        {% endif %}
+
+        <!-- 숫자 페이지 -->
+        {% for page_num in log_list.iter_pages() %}
+        {% if page_num %}
+        {% if page_num != log_list.page %}
+        <li class="page-item">
+            <a class="page-link" data-page="{{ page_num }}" href="javascript:void(0)">{{ page_num }}</a>
+        </li>
+        {% else %}
+        <li class="page-item active" aria-current="page">
+            <a class="page-link" href="#">{{ page_num }}</a>
+        </li>
+        {% endif %}
+        {% else %}
+        <li class="disabled">
+            <a class="page-link" href="javascript:void(0)">...</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+
+        <!-- 다음 페이지 -->
+        {% if log_list.has_next %}
+        <li class="page-item">
+            <a class="page-link" data-page="{{ log_list.next_num }}" href="javascript:void(0)">다음</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="javascript:void(0)">다음</a>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+
+
+<!-- 검색 폼 -->
+<form id="searchForm" method="get" action="{{ url_for('page.analysis_log') }}">
+    <input type="hidden" id="kw" name="kw" value="{{ kw or '' }}">
+    <input type="hidden" id="page" name="page" vluae="{{ page }}">
+</form>
+
+{% endblock %}
+{% block script %}
+<script type="text/javascript">
+
+    /* 페이징 */
+    const page_elements = document.getElementsByClassName("page-link");
+    Array.from(page_elements).forEach(function (element) {
+        element.addEventListener('click', function () {
+            document.getElementById('page').value = this.dataset.page;
+            document.getElementById('searchForm').submit();
+        });
+    });
+
+    /* 검색 */
+    const btn_search = document.getElementById("btn_search");
+    btn_search.addEventListener('click', function () {
+        document.getElementById('kw').value = document.getElementById('search_kw').value;
+        document.getElementById('page').value = 1; // 검색 시 1페이지부터 조회
+        document.getElementById('searchForm').submit();
+    })
+
+    const search_kw = document.getElementById("search_kw");
+    search_kw.addEventListener('keyup', function (event) {
+        if (event.key === "Enter") {
+            document.getElementById('kw').value = search_kw.value;
+            document.getElementById('page').value = 1; // 검색 시 1페이지부터 조회
+            document.getElementById('searchForm').submit();
+        }
+    });
+
+    /* 로그 상세 정보 */
+
+</script>
+{% endblock %}
