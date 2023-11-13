@@ -5,6 +5,7 @@ from flask_jwt_extended import *
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import desc
 
 import config
 
@@ -38,8 +39,10 @@ def create_app():
     app.register_blueprint(page_views.bp)
     
     # 필터
-    from .filter import format_datetime
+    from .filter import format_datetime, format_datetime2
     app.jinja_env.filters['birthday'] = format_datetime
+    app.jinja_env.filters['customDate'] = format_datetime2
+    
 
     # app.run(host='192.168.55.39', port= 8000)
     return app

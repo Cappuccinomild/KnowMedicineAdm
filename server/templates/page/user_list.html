@@ -7,7 +7,7 @@
 
     <!-- 검색 -->
     <div class="row p-3">
-        <div class="col-4">
+        <div class="col-3">
             <div class="input-group">
                 <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
                 <div class="input-group-append">
@@ -16,24 +16,19 @@
             </div>
         </div>
 
-        <div class="col-4 text-end">
+        <div class="col-2 text-end">
             <a href="{{ url_for('page.user_create') }}" class="btn btn-primary">유저 등록</a>
         </div>
     </div>
 
-
-    <!-- 유저 목록 -->
     <div class="row p-3">
-        <div class="col-8">
-            <table class="table table-bordered">
+        <!-- 유저 목록 -->
+        <div class="col-5">
+            <table class="table table-hover table-bordered">
                 <thead>
                     <tr class="text-center table-primary">
                         <th>번호</th>
                         <th>아이디</th>
-                        <th>이름</th>
-                        <th>생년월일</th>
-                        <th>성별</th>
-                        <th>전화번호</th>
                         <th>관리</th>
                     </tr>
                 </thead>
@@ -44,39 +39,6 @@
                     <tr class="text-center align-middle" data-userId="{{ user.user_id }}">
                         <td>{{ loop.index0 + 1 + (user_list.page - 1) * user_list.per_page }}</td>
                         <td class="text-center">{{ user.user_id }}</td>
-                        <td>
-                            <!--
-                            <a href="#" class="btn btn-outline-dark btn-sm">조회</a>
-                            <a href="#" class="btn btn-outline-dark btn-sm">수정</a>
-                            <a href="#" class="btn btn-outline-danger btn-sm">삭제</a>
-                            -->
-                            {% if user.name %}
-                            {{ user.name }}
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if user.birthday %}
-                            {{ user.birthday.strftime('%Y-%m-%d') }}
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if user.gender %}
-                            {{ user.gender }}
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td> 
-                            {% if user.phone %}
-                            {{ user.phone }}
-                            {% else %}
-                            -
-                            {% endif %} 
-                        </td>
                         <td>
                             <a href="{{ url_for('page.user_modify', user_id=user.user_id) }}" class="btn btn-outline-dark btn-sm">
                                 <i class="bi bi-pencil-fill me-1"></i>수정
@@ -89,17 +51,113 @@
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="7" class="text-center">회원 정보가 없습니다.</td>
+                        <td colspan="3" class="text-center">회원 정보가 없습니다.</td>
                     </tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
+
+        <!-- 유저 상세 정보 -->
+        <div class="col-6 card border p-3 ms-4">
+            <div class="">
+                <p class="fw-bold">상세정보</p>
+            </div>
+
+            <div class="row mb-3">
+                <label for="user_id" class="col-auto col-form-label">아이디</label>
+                <div class="col-6">
+                    <input type="text" class="form-control" name="user_id" id="user_id" value="" readonly>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="name" class="col-auto col-form-label">이름</label>
+                <div class="col-6">
+                    <input type="text" class="form-control" name="name" id="name" value="" readonly>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="birthday" class="col-auto col-form-label">생년월일</label>
+                <div class="col-6">
+                    <input type="date" class="form-control" name="birthday" id="birthday" value="" readonly>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label class="col-auto col-form-label">성별</label>
+                <div class="col-auto">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="gender" id="male" value="남성" checked disabled>
+                        <label class="form-check-label" for="male">남성</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="gender" id="female" value="여성" disabled>
+                        <label class="form-check-label" for="female">여성</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="phone" class="col-auto col-form-label">전화번호</label>
+                <div class="col-6">
+                    <input type="text" class="form-control" name="phone" id="phone" value="" readonly>
+                </div>
+            </div>
+
+            <div class="col-8 text-center my-3">
+                <a href="javascript:void(0)" class="btn btn-outline-dark btn- disabled" id="editBtn" data-userId="">
+                    <i class="bi bi-pencil-fill me-1"></i>수정
+                </a>
+                <a href="javascript:void(0)" class="btn btn-outline-danger btn- disabled" id="deleteBtn" data-userId="">
+                    <i class="bi bi-x-lg me-1"></i>삭제
+                </a>
+            </div>
+
+            <hr>
+
+            <div class="mt-3">
+                <p class="fw-bold">최근이력</p>
+            </div>
+
+            <!--
+            <div class="row mb-3">
+                <label for="rate" class="col-auto col-form-label">정확도</label>
+                <div class="col-6">
+                    <input type="text" class="form-control" name="rate" id="rate" value="" readonly>
+                </div>
+                
+            </div>
+
+            <div class="row mb-3">
+                <label for="date" class="col-auto col-form-label">분석날짜</label>
+                <div class="col-6">
+                    <input type="text" class="form-control" name="date" id="date" value="" readonly>
+                </div>
+            </div>
+            -->
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr class="text-center table-primary">
+                        <th>번호</th>
+                        <th>분석날짜</th>
+                        <th>태깅 의약품 class ID</th>
+                        <th>정확도</th>
+                    </tr>
+                </thead>
+                <tbody id="recentLogsTableBody" class="text-center"></tbody>
+            </table>
+
+
+
+        </div>
     </div>
 
     <!-- 페이징 -->
     <div class="row">
-        <div class="col-8">
+        <div class="">
             <ul class="pagination justify-content-center mt-5">
                 <!-- 이전 페이지 -->
                 {% if user_list.has_prev %}
@@ -147,7 +205,6 @@
 
 </div>
 
-
 <!-- 검색 폼 -->
 <form id="searchForm" method="get" action="{{ url_for('page.user_list') }}">
     <input type="hidden" id="kw" name="kw" value="{{ kw or '' }}">
@@ -155,6 +212,7 @@
 </form>
 
 {% endblock %}
+
 {% block script %}
 <script type="text/javascript">
 
@@ -184,15 +242,167 @@
         }
     });
 
+    /* 폼 정렬 */
+    const labels = document.querySelectorAll('.col-form-label');
+    let maxLabelWidth = 0;
+
+    labels.forEach(label => {
+        const labelWidth = label.offsetWidth;
+        if (labelWidth > maxLabelWidth) {
+            maxLabelWidth = labelWidth;
+        }
+    });
+
+    labels.forEach(label => {
+        label.style.width = maxLabelWidth + 'px';
+    })
+
+    /* 날짜 포맷팅 */
+    function formatDate(date) {
+        
+        if (!date) {
+            return "";
+        }
+
+        const d = new Date(date);
+
+        if (isNaN(d.getTime())) {
+            return "";
+        }
+
+        const year = d.getFullYear();
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const day = d.getDate().toString().padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDate2(date) {
+
+        const d = new Date(date);
+
+        if (isNaN(d.getTime())) {
+            return "";
+        }
+
+        const year = d.getFullYear();
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const day = d.getDate().toString().padStart(2, '0');
+        const hour = d.getHours().toString().padStart(2, '0');
+        const minute = d.getMinutes().toString().padStart(2, '0');
+
+        return `${year}-${month}-${day} ${hour}:${minute}`;
+    }
+
+    /* 유저 상세 정보(AJAX) */
+    const rows = document.querySelectorAll('tr[data-userId]');
+    const idInput = document.getElementById('user_id');
+    const nameInput = document.getElementById('name');
+    const birthdayInput = document.getElementById('birthday');
+    const phoneInput = document.getElementById('phone');
+    // const rate = document.getElementById('rate');
+    // const date = document.getElementById('date');
+    const recentLogsTableBody = document.getElementById('recentLogsTableBody');
+
+    const editBtn = document.getElementById("editBtn");
+    const deleteBtn = document.getElementById("deleteBtn");
+
+    let selectedRow = null;
+
+    rows.forEach(function (row) {
+        row.addEventListener('click', function () {
+            const userId = this.getAttribute('data-userId');
+            idInput.value = userId;
+
+            if (selectedRow) {
+                selectedRow.classList.remove('table-active');
+            }
+
+            selectedRow = this;
+            selectedRow.classList.add('table-active');
+
+            nameInput.value = '';
+            birthdayInput.value = '';
+            phoneInput.value = '';
+            // rate.value = '';
+            // date.value = '';
+
+            // 초기화
+            recentLogsTableBody.innerHTML = '';
+
+            fetch(`/page/user_detail/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if ('error' in data) {
+                        console.error(data.error);
+                    } else {
+                        nameInput.value = data.name;
+                        birthdayInput.value = formatDate(data.birthday);
+                        phoneInput.value = data.phone;
+                        // rate.value = data.rate;
+                        // date.value = formatDate(data.date);
+
+                        const genderValue = data.gender;
+                        if (genderValue === "남성") {
+                            document.getElementById('male').checked = true;
+                        } else if (genderValue === "여성") {
+                            document.getElementById('female').checked = true;
+                        }
+
+                        editBtn.classList.remove('disabled');
+                        deleteBtn.classList.remove('disabled');
+
+                        editBtn.setAttribute("data-userId", userId);
+                        deleteBtn.setAttribute("data-userId", userId);
+
+                        // 최근 이력 추가
+                        if (data.logs && data.logs.length > 0) {
+                            data.logs.forEach(function (log, index) {
+                                const row = recentLogsTableBody.insertRow();
+                                const cell1 = row.insertCell(0);
+                                const cell2 = row.insertCell(1);
+                                const cell3 = row.insertCell(2);
+                                const cell4 = row.insertCell(3);
+
+                                cell1.textContent = index + 1;
+                                cell2.textContent = formatDate2(log.date);
+                                cell3.textContent = log.class_id;
+                                cell4.textContent = log.rate;
+                            })
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.log('유저 정보를 가져오는 중 오류 발생: ', error)
+                });
+        })
+    })
+
+
+    /* 수정 */
+    editBtn.addEventListener('click', function () {
+        const userId = this.getAttribute('data-userId');
+        if (userId) {
+            window.location.href = `/page/user_modify/${userId}`;
+        }
+    })
+
     /* 삭제 */
     const delete_elements = document.getElementsByClassName("delete");
-    Array.from(delete_elements).forEach(function(element) {
-        element.addEventListener('click', function() {
-            if(confirm("정말 삭제하시겠습니까?")) {
+    Array.from(delete_elements).forEach(function (element) {
+        element.addEventListener('click', function () {
+            if (confirm("정말 삭제하시겠습니까?")) {
                 location.href = this.dataset.uri;
-           } 
+            }
         });
     });
+
+    deleteBtn.addEventListener('click', function () {
+        const userId = this.getAttribute('data-userId');
+        if (userId && confirm("정말 삭제하시겠습니까?")) {
+            window.location.href = `/page/user_delete/${userId}`;
+        }
+    })
 
 </script>
 {% endblock %}

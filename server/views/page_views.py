@@ -6,6 +6,9 @@ from server import db
 from server.forms import UserCreateForm, UserDetailForm
 from server.models import Medicine, User, Check_log
 from server.views.auth_views import login_required
+from sqlalchemy import desc
+
+from datetime import timedelta, timezone
 
 bp = Blueprint("page", __name__, url_prefix="/page")
 
@@ -103,6 +106,63 @@ def user_modify(user_id):
         
     return render_template('page/user_modify.html', current_menu="user_list", form=form)
 
+@bp.route('/user_detail/<string:userId>')
+def user_detail(userId):
+    user = User.query.get(userId)
+    # check_log = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).first()
+    check_logs = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).all()
+    
+    
+    # if user is not None and check_log is not None:
+    #     return jsonify({
+    #         'name': user.name,
+    #         'birthday': user.birthday,
+    #         'gender': user.gender,
+    #         'phone': user.phone,
+    #         'rate': check_log.rate,
+    #         'date': check_log.date
+    #     })
+    # elif user is not None:
+    #     return jsonify({
+    #         'name': user.name,
+    #         'birthday': user.birthday,
+    #         'gender': user.gender,
+    #         'phone': user.phone,
+    #         'rate': '',
+    #         'date': '',
+    #     })
+    
+    if user is not None:
+        if check_logs:
+            logs_data = [
+                {
+                    'rate': log.rate,
+                    'date': log.date,
+                    'class_id': log.class_id
+                }
+                for log in check_logs
+            ]
+            user_data = {
+                'name': user.name,
+                'birthday': user.birthday,
+                'gender': user.gender,
+                'phone': user.phone,
+                'logs': logs_data
+            }
+        else:
+            user_data = {
+                'name': user.name,
+                'birthday': user.birthday,
+                'gender': user.gender,
+                'phone': user.phone,
+                'logs': []
+            }
+        
+        return jsonify(user_data)
+        
+    return jsonify({'error': '유저 정보를 찾을 수 없습니다.'}), 404
+
+
 
 @bp.route('/user_delete/<string:user_id>')
 @login_required
@@ -119,14 +179,17 @@ def analysis_log():
     
     page = request.args.get("page", type=int, default=1)
     kw = request.args.get("kw", type=str, default="")
-    
-    # TODO: DB에서 분석 로그 데이터 받아오기
-    log_list = Check_log.query.order_by(Check_log.check_log_id)
+
+    log_list = Check_log.query.order_by(desc(Check_log.date))
 
     if kw:
         search = "%%{}%%".format(kw)
         log_list = log_list.filter(Check_log.check_log_id.ilike(search))
         
     log_list = log_list.paginate(page=page, per_page=10)
+    
+    # UTC 시각을 한국 시각으로 변환
+    for log in log_list.items:
+        log.date = log.date.replace(tzinfo=timezone.utc).astimezone(timezone(timedelta(hours=9)))
 
     return render_template("page/analysis_log.html", current_menu="analysis_log", log_list=log_list, page=page, kw=kw) 

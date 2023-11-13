@@ -19,7 +19,7 @@
                 <thead>
                     <tr class="text-center table-primary">
                         <th>번호</th>
-                        <th>ID</th>
+                        <th>분석로그 ID</th>
                         <th>일시</th>
                         <th>추측 약품</th>
                         <th>정확도</th>
@@ -31,10 +31,10 @@
                     {% for log in log_list.items %}
                     <tr class="text-center" data-checkLogId="{{ log.check_log_id }}">
                         <td>{{ loop.index0 + 1 + (log_list.page - 1) * log_list.per_page }}</td>
-                        <td class="text-center">( 사진 전송자 ID )</td>
-                        <td>( 날짜 )</td>
-                        <td>( 추측 약품 )</td>
-                        <td>( 정확도 )</td>
+                        <td class="text-center">{{ log.check_log_id }}</td>
+                        <td>{{ log.date|customDate }}</td>
+                        <td>{{ log.class_id }}</td>
+                        <td>{{ log.rate }}</td>
                     </tr>
                     {% endfor %}
                     {% else %}
@@ -47,7 +47,7 @@
         </div>
 
         <!-- 로그 상세 정보 -->
-        <div class="col-6 container border p-3">
+        <div class="col-6 card border p-3 ms-4">
             <div class="mb-3">
                 ( 사진 )
             </div>
@@ -137,6 +137,24 @@
     });
 
     /* 로그 상세 정보 */
+    const rows = document.querySelectorAll('tr[data-checkLogId]');
+
+    let selectedRow = null
+
+    rows.forEach(function (row) {
+        row.addEventListener('click', function () {
+            const checkLogId = this.getAttribute('data-checkLogId');
+
+            if (selectedRow) {
+                selectedRow.classList.remove('table-active');
+            }
+
+            selectedRow = this;
+            selectedRow.classList.add('table-active');
+
+            console.log("checkLogId : " + checkLogId);
+        })
+    })
 
 </script>
 {% endblock %}

@@ -51,7 +51,7 @@
         </div>
 
         <!-- 약품 상세 정보 -->
-        <div class="col-6 container border p-3">
+        <div class="col-6 card border p-3 ms-4">
             <div class="mb-3">
                 <p class="fw-bold" id="name"></p>
             </div>
@@ -162,6 +162,8 @@
     const usageTextarea = document.getElementById('usage');
     const cautionTextarea = document.getElementById('caution');
 
+    let selectedRow = null
+
     function adjustTextareaHeight(textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = (textarea.scrollHeight) + 'px';
@@ -171,6 +173,13 @@
     rows.forEach(function (row) {
         row.addEventListener('click', function () {
             const medId = this.getAttribute('data-medId');
+
+            if (selectedRow) {
+                selectedRow.classList.remove('table-active');
+            }
+
+            selectedRow = this;
+            selectedRow.classList.add('table-active');
 
             fetch(`/page/medicine_detail/${medId}`)
                 .then(response => response.json())
@@ -182,7 +191,7 @@
                         effectTextarea.value = data.effect;
                         usageTextarea.value = data.usage;
                         cautionTextarea.value = data.caution;
-                        
+
                         /*
                         adjustTextareaHeight(effectTextarea);
                         adjustTextareaHeight(usageTextarea);
@@ -191,7 +200,7 @@
                     }
                 })
                 .catch(error => {
-                    console.error('약품 정보를 가져오는 중 오류 발생:', error)
+                    console.error('약품 정보를 가져오는 중 오류 발생: ', error)
                 });
         });
     });
