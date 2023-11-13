@@ -24,13 +24,16 @@ def PIL2OpenCV(pil_image):
     
     return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
-def xyxy_to_xywh(xyxy):
+def xyxy_to_xywh(xyxy, img):
+
+    img_y, img_x, rgb = img.shape
+
     x1, y1, x2, y2 = xyxy
     width = x2 - x1
     height = y2 - y1
     x = x1 + width / 2
     y = y1 + height / 2
-    return x, y, width, height
+    return x/img_x, y/img_y, width/img_x, height/img_y
 
 # 이미지 분석, 로그저장
 def yolo_img_predict(id, img):
@@ -99,7 +102,7 @@ def yolo_img_predict(id, img):
 
         # yolo 라벨 데이터는 xywh 로 저장되므로 변환이 필요함
         # 왼쪽 위가 0.0
-        log_data['x'], log_data['y'], log_data['width'], log_data['height'] = xyxy_to_xywh(xyxy)
+        log_data['x'], log_data['y'], log_data['width'], log_data['height'] = xyxy_to_xywh(xyxy, img)
 
         print(log_data)
         # save tag data to db
