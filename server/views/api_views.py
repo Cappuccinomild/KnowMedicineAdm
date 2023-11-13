@@ -24,6 +24,14 @@ def PIL2OpenCV(pil_image):
     
     return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
+def xyxy_to_xywh(xyxy):
+    x1, y1, x2, y2 = xyxy
+    width = x2 - x1
+    height = y2 - y1
+    x = x1 + width / 2
+    y = y1 + height / 2
+    return x, y, width, height
+
 # 이미지 분석, 로그저장
 def yolo_img_predict(id, img):
     
@@ -31,7 +39,7 @@ def yolo_img_predict(id, img):
 
     results = yolo_model(img)
 
-    from server.models import ID_seq, Img_set, Tag_set, Medicine
+    from server.models import ID_seq, Img_set, Check_log 
     
     image_data = {}
     
@@ -79,22 +87,23 @@ def yolo_img_predict(id, img):
 
     for rate, label, xyxy in zip(correct_rate, label, bbox_xyxy):
         
-        start_x, start_y, end_x, end_y = xyxy
+        
         # init tag data
-        tag_data = {}
+        log_data = {}
         print(str(int(label.item())))
-        tag_data['tag_id'] = ID_seq.call_ID('TAG')
-        tag_data['img_id'] = image_data['img_id']
-        tag_data['med_id'] = Medicine.query.filter(Medicine.class_id == str(int(label.item()))).first().med_id
-        tag_data['rate'] = rate.item()
-        tag_data['start_x'] = start_x
-        tag_data['start_y'] = start_y
-        tag_data['end_x'] = end_x
-        tag_data['end_y'] = end_y
+        log_data['check_log_id'] = ID_seq.call_ID('LOG')
+        log_data['user_id'] = id
+        log_data['img_id'] = image_data['img_id']
+        log_data['class_id'] = str(int(label.item()))
+        log_data['rate'] = rate.item()
 
-        print(tag_data)
+        # yolo 라벨 데이터는 xywh 로 저장되므로 변환이 필요함
+        # 왼쪽 위가 0.0
+        log_data['x'], log_data['y'], log_data['width'], log_data['height'] = xyxy_to_xywh(xyxy)
+
+        print(log_data)
         # save tag data to db
-        Tag_set.add_tag(**tag_data)
+        Check_log.add_check_log(**log_data)
 
         if rate >= 0.8:
             rate_list.append(rate)

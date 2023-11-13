@@ -35,16 +35,45 @@ class User(db.Model):
 
 class Check_log(db.Model):
     check_log_id = db.Column(db.String(12), primary_key=True, comment = "사진 분석 로그 ID")
-    user_log_id = db.Column(db.String(12), nullable=False, comment = "사진 전송 로그 ID")
+    user_id = db.Column(db.String(12), nullable=False, comment = "사진 전송자 ID")
     img_id = db.Column(db.String(12), nullable=False, comment = "이미지 ID")
-    med_id = db.Column(db.String(12), nullable=True, comment = "분석결과 의약품 ID")
-    start_x = db.Column(db.Float, nullable=True, comment = "좌표 x1")
-    start_y = db.Column(db.Float, nullable=True, comment = "좌표 y1")
-    end_x = db.Column(db.Float, nullable=True, comment = "좌표 x2")
-    end_y = db.Column(db.Float, nullable=True, comment = "좌표 y2")
-    rate = db.Column(db.Integer, nullable=True, comment = "분석 결과 정확도")
+    class_id = db.Column(db.String(12), nullable=False, comment = "태깅 의약품 class ID")
+    x = db.Column(db.Float, nullable=True, comment = "좌표 x1")
+    y = db.Column(db.Float, nullable=True, comment = "좌표 y1")
+    width = db.Column(db.Float, nullable=True, comment = "너비")
+    height = db.Column(db.Float, nullable=True, comment = "높이")
+    rate = db.Column(db.Float, nullable=True, comment = "분석 결과 정확도")
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, comment = "분석날짜")
 
+    def add_check_log(check_log_id, user_id, img_id, class_id, rate, x=None, y=None, width=None, height=None):
+        """
+        Add tag data to the database.
+
+        :param img_id: Image ID.
+        :param med_id: Tagged medicine ID.
+        :param x: Starting x-coordinate (optional).
+        :param y: Starting y-coordinate (optional).
+        :param width: Ending width (optional).
+        :param height: Ending height (optional).
+        """
+        if not all([img_id, class_id]):
+            raise ValueError("Image ID and medicine ID are required for tagging.")
+
+        new_tag = Check_log(
+            check_log_id = check_log_id,
+            user_id = user_id,
+            img_id = img_id,
+            class_id = class_id,
+            x = x,
+            y = y,
+            width = width,
+            height = height,
+            rate = rate,
+            date = datetime.utcnow()
+        )
+
+        db.session.add(new_tag)
+        db.session.commit()
 # key, seq 모음
 class ID_seq(db.Model):
     ID = db.Column(db.String(3), primary_key=True, comment = "키 앞자리 세자리")
@@ -77,7 +106,7 @@ class Img_set(db.Model):
     user_id = db.Column(db.String(12), nullable=True, comment = "이미지 출처 ID")
     img_dir = db.Column(db.Text, nullable=False, comment = "이미지 저장 장소")
     train_cnt = db.Column(db.Integer, nullable=False, default=0, comment = "학습에 사용된 횟수")
-    rate = db.Column(db.Float, nullable=False, comment = "분석 결과 평균 정확도")
+    rate = db.Column(db.Float, nullable=True, comment = "분석 결과 평균 정확도")
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, comment = "저장된 날짜")
 
     def add_img(img_id, user_id, img_dir, rate):
@@ -108,36 +137,34 @@ class Img_set(db.Model):
 class Tag_set(db.Model):
     tag_id = db.Column(db.String(12), primary_key=True, comment = "태그 ID")
     img_id = db.Column(db.String(12), nullable=False, comment = "이미지 ID")
-    med_id = db.Column(db.String(12), nullable=False, comment = "태깅 의약품 ID")
-    rate = db.Column(db.Float, nullable=False, comment = "분석 정확도")
-    start_x = db.Column(db.Float, nullable=True, comment = "좌표 x1")
-    start_y = db.Column(db.Float, nullable=True, comment = "좌표 y1")
-    end_x = db.Column(db.Float, nullable=True, comment = "좌표 x2")
-    end_y = db.Column(db.Float, nullable=True, comment = "좌표 y2")
+    class_id = db.Column(db.String(12), nullable=False, comment = "태깅 의약품 class ID")
+    x = db.Column(db.Float, nullable=True, comment = "좌표 x1")
+    y = db.Column(db.Float, nullable=True, comment = "좌표 y1")
+    width = db.Column(db.Float, nullable=True, comment = "너비")
+    height = db.Column(db.Float, nullable=True, comment = "높이")
 
-    def add_tag(tag_id, img_id, med_id, rate, start_x=None, start_y=None, end_x=None, end_y=None):
+    def add_tag(tag_id, img_id, class_id, x=None, y=None, width=None, height=None):
         """
         Add tag data to the database.
 
         :param img_id: Image ID.
         :param med_id: Tagged medicine ID.
-        :param start_x: Starting x-coordinate (optional).
-        :param start_y: Starting y-coordinate (optional).
-        :param end_x: Ending x-coordinate (optional).
-        :param end_y: Ending y-coordinate (optional).
+        :param x: Starting x-coordinate (optional).
+        :param y: Starting y-coordinate (optional).
+        :param width: Ending width (optional).
+        :param height: Ending height (optional).
         """
-        if not all([img_id, med_id]):
+        if not all([img_id, class_id]):
             raise ValueError("Image ID and medicine ID are required for tagging.")
 
         new_tag = Tag_set(
             tag_id = tag_id,
             img_id = img_id,
-            med_id = med_id,
-            rate = rate,
-            start_x = start_x,
-            start_y = start_y,
-            end_x = end_x,
-            end_y = end_y
+            class_id = class_id,
+            x = x,
+            y = y,
+            width = width,
+            height = height
         )
 
         db.session.add(new_tag)

@@ -176,3 +176,6 @@ test_py/
 
 # migrations
 migrations/
+
+# yolo_datase
+yolo_model/
