@@ -106,10 +106,11 @@ class Img_set(db.Model):
     user_id = db.Column(db.String(12), nullable=True, comment = "이미지 출처 ID")
     img_dir = db.Column(db.Text, nullable=False, comment = "이미지 저장 장소")
     train_cnt = db.Column(db.Integer, nullable=False, default=0, comment = "학습에 사용된 횟수")
+    train_yn = db.Column(db.String(2), nullable=False, default = "N", comment = "학습 사용 여부")
     rate = db.Column(db.Float, nullable=True, comment = "분석 결과 평균 정확도")
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, comment = "저장된 날짜")
 
-    def add_img(img_id, user_id, img_dir, rate):
+    def add_img(img_id, user_id, img_dir, rate, train_yn="N"):
         """
         Add image data to the database.
 
@@ -127,6 +128,7 @@ class Img_set(db.Model):
             user_id=user_id,
             img_dir=img_dir,
             train_cnt=0,
+            train_yn=train_yn,
             rate=rate,
             date=datetime.utcnow()
         )
