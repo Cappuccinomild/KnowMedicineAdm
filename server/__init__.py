@@ -30,19 +30,19 @@ def create_app():
     # JWT 확장 모듈을 flask 어플리케이션에 등록
     jwt = JWTManager(app)
 
-    from .views import main_views, auth_views, page_views, api_views
+    from .views import main_views, auth_views, page_views, api_views, yolo_views
     
     # 블루프린트
     app.register_blueprint(api_views.bp)
     app.register_blueprint(main_views.bp)
     app.register_blueprint(auth_views.bp)
     app.register_blueprint(page_views.bp)
+    app.register_blueprint(yolo_views.bp)
     
     # 필터
     from .filter import format_datetime, format_datetime2
     app.jinja_env.filters['birthday'] = format_datetime
     app.jinja_env.filters['customDate'] = format_datetime2
-    
 
     # app.run(host='192.168.55.39', port= 8000)
     return app

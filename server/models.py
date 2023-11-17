@@ -171,3 +171,39 @@ class Tag_set(db.Model):
 
         db.session.add(new_tag)
         db.session.commit()
+
+    def update_tag(tag_id, img_id=None, class_id=None, x=None, y=None, width=None, height=None):
+        """
+        Update tag data in the database.
+
+        :param tag_id: Tag ID to be updated.
+        :param img_id: New image ID (optional).
+        :param class_id: New class ID (optional).
+        :param x: New starting x-coordinate (optional).
+        :param y: New starting y-coordinate (optional).
+        :param width: New ending width (optional).
+        :param height: New ending height (optional).
+        """
+        # Query the existing tag data by tag_id
+        existing_tag = Tag_set.query.filter_by(tag_id=tag_id).first()
+
+        # Check if the tag_id exists
+        if not existing_tag:
+            raise ValueError(f"Tag with tag_id {tag_id} does not exist.")
+
+        # Update the tag data with new values if provided
+        if img_id is not None:
+            existing_tag.img_id = img_id
+        if class_id is not None:
+            existing_tag.class_id = class_id
+        if x is not None:
+            existing_tag.x = x
+        if y is not None:
+            existing_tag.y = y
+        if width is not None:
+            existing_tag.width = width
+        if height is not None:
+            existing_tag.height = height
+
+        # Commit the changes to the database
+        db.session.commit()

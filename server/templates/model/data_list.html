@@ -1,0 +1,346 @@
+<link href="{{url_for('static', filename='cropper.css')}}" rel="stylesheet">
+<script src="{{url_for('static', filename='cropper.js')}}"></script>
+
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="border-bottom py-3 m-3">이미지 목록</h2>
+
+<div class="py-3 m-3">
+    <div class="row p-3">
+        <div class="col-5 p-3">
+            <!-- 검색 -->
+            <div class="input-group mb-3">
+                <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>
+                </div>
+            </div>
+
+            <!-- 약품 목록 -->
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr class="text-center table-primary">
+                        <th>번호</th>
+                        <th>ID</th>
+                        <th>학습횟수</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% if using_dataset.total > 0 %}
+                    {% for dataset in using_dataset.items %}
+                    <tr class="text-center" data-imgId="{{ dataset.img_id }}">
+                        <td>{{ loop.index0 + 1 + (using_dataset.page - 1) * using_dataset.per_page }}</td>
+                        <td class="text-center">{{ dataset.img_id }}</td>
+                        <td>{{dataset.train_cnt}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            <!-- 약품 상세 정보 -->
+            
+            <div class="mb-3">
+                <select class="form-control" id="ClassNameList">
+                    {% for medicine in medicine_list %}
+                        <option value="{{medicine.class_id}}">{{medicine.name}}</option>
+                    {% endfor %}
+                  </select>
+                <button type="submit" class="btn btn-primary mb-3" style="float: right;">
+                    저장
+                </button>
+                <button id="addTag" onclick="add_tag();" type="button" class="btn btn-primary mb-3" style="float: right;">
+                    태그 추가
+                </button>
+            </div>
+        </div>
+        
+        
+        <div class="col-6 container border p-3">
+            
+
+            <div class="mb-3">
+                <p class="fw-bold" id="name">약품 이름</p>
+                <img style="display:block; max-width: 100%;" src="/static/image/medicine_thum/tagging.png" class="form-control" id="img" ></img>
+            </div>
+
+            <div class="mb-3">
+                <p>
+                    <div id="btn_layer" class="btn-group btn-group-toggle" data-toggle="buttons">
+
+                    </div>
+                </p>
+                
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 페이징 -->
+    <ul class="pagination justify-content-center mt-5">
+        <!-- 이전 페이지 -->
+        {% if using_dataset.has_prev %}
+        <li class="page-item">
+            <a class="page-link" data-page="{{ using_dataset.prev_num }}" href="javascript:void(0)">이전</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="javascript:void(0)">이전</a>
+        </li>
+        {% endif %}
+
+        <!-- 숫자 페이지 -->
+        {% for page_num in using_dataset.iter_pages() %}
+        {% if page_num %}
+        {% if page_num != using_dataset.page %}
+        <li class="page-item">
+            <a class="page-link" data-page="{{ page_num }}" href="javascript:void(0)">{{ page_num }}</a>
+        </li>
+        {% else %}
+        <li class="page-item active" aria-current="page">
+            <a class="page-link" href="#">{{ page_num }}</a>
+        </li>
+        {% endif %}
+        {% else %}
+        <li class="disabled">
+            <a class="page-link" href="javascript:void(0)">...</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+
+        <!-- 다음 페이지 -->
+        {% if using_dataset.has_next %}
+        <li class="page-item">
+            <a class="page-link" data-page="{{ using_dataset.next_num }}" href="javascript:void(0)">다음</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="javascript:void(0)">다음</a>
+        </li>
+        {% endif %}
+    </ul>
+</div>
+
+<!-- 검색 폼 -->
+<form id="searchForm" method="get" action="{{ url_for('model.data_list') }}">
+    <input type="hidden" id="kw" name="kw" value="{{ kw or '' }}">
+    <input type="hidden" id="page" name="page" value="{{ page }}">
+</form>
+
+{% endblock %}
+{% block script %}
+<script type="text/javascript">
+
+    /* 페이징 */
+    const page_elements = document.getElementsByClassName("page-link");
+    Array.from(page_elements).forEach(function (element) {
+        element.addEventListener('click', function () {
+            document.getElementById('page').value = this.dataset.page;
+            document.getElementById('searchForm').submit();
+        });
+    });
+
+    /* 검색 */
+    const btn_search = document.getElementById("btn_search");
+    btn_search.addEventListener('click', function () {
+        document.getElementById('kw').value = document.getElementById('search_kw').value;
+        document.getElementById('page').value = 1; // 검색 시 1페이지부터 조회
+        document.getElementById('searchForm').submit();
+    })
+
+    const search_kw = document.getElementById("search_kw");
+    search_kw.addEventListener('keyup', function (event) {
+        if (event.key === "Enter") {
+            document.getElementById('kw').value = search_kw.value;
+            document.getElementById('page').value = 1; // 검색 시 1페이지부터 조회
+            document.getElementById('searchForm').submit();
+        }
+    });
+
+    /* 약품 상세 정보(AJAX) */
+    var tag_list;
+    var btn_index;
+    const rows = document.querySelectorAll('tr[data-imgId]');
+    const nameArea = document.getElementById('name');
+    const imgArea = document.getElementById('img');
+    const usageTextarea = document.getElementById('usage');
+    const cautionTextarea = document.getElementById('caution');
+    const buttonBox = document.getElementById('btn_layer');
+    const cropper = new Cropper(imgArea, {
+                            viewMode: 1, // 크롭 박스가 이미지를 완전히 포함하도록 설정
+                            zoomable:false,
+                            rotatable:false,
+                            movable:false,
+                            toggleDragModeOnDblClick:false,
+                            crop(event) {
+                                
+                                // 현재 액티브 상태인 위치의 번호를 가져옴 TAG "1"
+                                
+                                
+                                const cropBox = cropper.getCropBoxData();
+                                tag_list[btn_index].left = cropBox.left;
+                                tag_list[btn_index].top = cropBox.top;
+                                tag_list[btn_index].width = cropBox.width;
+                                tag_list[btn_index].height = cropBox.height;
+
+                                console.log(btn_index);
+                                console.log(tag_list);
+                                },
+                        });
+
+    function adjustTextareaHeight(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+
+    }
+
+    function tagClick(label, index) {
+        return function() {
+            btn_index = index;
+            const tag = tag_list[index];
+
+            // 태그 정보 cropper에 적용
+            tagClickEvent(tag);
+
+            // 약품 이름 설정
+            nameArea.textContent = tag.name;
+
+            // active 클래스 제거
+            activeClear();
+
+            // 현재 클릭한 label에 active 클래스 추가
+            label.classList.add('active');
+
+            console.log(index);
+        };
+    }
+
+    function tagClickEvent(tag){
+
+        const img_size = cropper.getContainerData();
+
+        //최초 로드시 단위는 비율이다. 최초 로드의 경우 처리
+        if (tag.width < 1){
+            const width = tag.width * img_size.width;
+            const height = tag.height * img_size.height;
+
+            const left = tag.left * img_size.width - width/2;
+            const top = tag.top * img_size.height - height/2;
+
+            cropper.setCropBoxData({
+            'left' : left,
+            'top' : top,
+            'width' : width,
+            'height' : height,
+            });
+
+            return;
+        }
+        
+        console.log(tag);
+        cropper.setCropBoxData(tag);
+        
+    }
+
+    function activeClear(){
+        const activeLabels = document.querySelectorAll('.btn-group-toggle .active');
+
+        activeLabels.forEach(activeLabel => {
+        activeLabel.classList.remove('active');
+        });
+    }
+
+    // 태그추가 버튼
+    function add_tag(){
+
+        const nowData = cropper.getCropBoxData();
+        
+        // 태그데이터 초기화
+        const tag = {
+            'tag_id':"",
+            'name':document.getElementById("ClassNameList").options[document.getElementById("ClassNameList").selectedIndex].text,
+            'class_id': document.getElementById("ClassNameList").value,
+            'left': 0,
+            'top': 0,
+            'width': 0,
+            'height': 0,
+        };
+        console.log(tag);
+        const label = document.createElement('label');
+
+        activeClear();
+        label.classList.add('btn', 'btn-outline-secondary', 'active');
+        
+        label.id = tag.tag_id;
+
+        // 전체 버튼의 개수
+        const index = buttonBox.querySelectorAll('*').length;
+        label.textContent = 'TAG ' + index;
+
+        nameArea.textContent = tag.name;
+        
+        label.addEventListener('click', tagClick(label, index));
+        
+        
+        buttonBox.appendChild(label);
+        tag_list.push(tag);
+
+        btn_index = index;
+
+        //추가 후 버튼 클릭 구현
+        tagClick(label, index)();
+
+    }
+    rows.forEach(function (row) {
+        row.addEventListener('click', function () {
+            const imgId = this.getAttribute('data-imgId');
+
+            fetch(`/model/data_detail/${imgId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if ('error' in data) {
+                        console.error(data.error);
+                    } else {
+                        
+                        // 배경이미지 변경
+                        cropper.replace(data.path);
+                        
+                        // 기존 버튼 제거
+                        buttonBox.innerHTML='';
+                        console.log(data);
+
+                        tag_list = data.data;
+                        let i = 0;
+                        for (const tag of tag_list){
+                            const label = document.createElement('label');
+
+                            label.classList.add('btn', 'btn-outline-secondary');
+                            
+                            label.id = tag.tag_id;
+                            
+                            label.textContent = 'TAG ' + i;
+                            
+                            label.addEventListener('click', tagClick(label, i));
+                            // 버튼을 추가할 div에 버튼을 추가
+                            buttonBox.appendChild(label);
+                            i++;
+                        }
+
+                    }
+                })
+                .catch(error => {
+                    console.error('약품 정보를 가져오는 중 오류 발생:', error)
+                });
+        });
+    });
+
+
+
+</script>
+{% endblock %}

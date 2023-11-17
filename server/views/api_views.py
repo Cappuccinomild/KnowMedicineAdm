@@ -59,14 +59,15 @@ def yolo_img_predict(id, img):
         fname_time = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 
         # 이미지 저장위치 생성
-        path = './image/' + path_month
+        head = './server'
+        path = '/static/image/' + path_month
         
         fname = "_".join([image_data['img_id'], fname_time])
         fname += ".png"
 
         # 이미지 저장
-        os.makedirs(path,exist_ok=True)
-        cv2.imwrite(path + "/" + fname, img)
+        os.makedirs(head + path,exist_ok=True)
+        cv2.imwrite(head + path + "/" + fname, img)
 
         image_data['user_id'] = id
         image_data['img_dir'] = path + "/" + fname
