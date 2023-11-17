@@ -110,8 +110,14 @@ def user_modify(user_id):
 def user_detail(userId):
     user = User.query.get(userId)
     # check_log = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).first()
-    check_logs = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).all()
+    # check_logs = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).all()
+    subquery = Check_log.query.filter_by(user_id=userId).subquery()
     
+    check_logs = db.session.query(
+        subquery.c.rate,
+        subquery.c.date,
+        Medicine.name.label('medicine_name')
+    ).join(Medicine, Medicine.class_id == subquery.c.class_id).order_by(desc(subquery.c.date))
     
     # if user is not None and check_log is not None:
     #     return jsonify({
@@ -138,16 +144,33 @@ def user_detail(userId):
                 {
                     'rate': log.rate,
                     'date': log.date,
-                    'class_id': log.class_id
+                    # 'class_id': log.class_id
+                    'medicine_name': log.medicine_name
                 }
                 for log in check_logs
             ]
+            
+            # 약품 종류와 약품별 데이터 개수 계산
+            medicine_data = {}
+            for log in check_logs:
+                medicine_name = log.medicine_name
+                if medicine_name not in medicine_data:
+                    medicine_data[medicine_name] = 1
+                else:
+                    medicine_data[medicine_name] += 1
+            
+            # 약품 종류와 약품별 데이터 개수를 리스트로 변환
+            labels = list(medicine_data.keys())
+            counts = list(medicine_data.values())
+            
             user_data = {
                 'name': user.name,
                 'birthday': user.birthday,
                 'gender': user.gender,
                 'phone': user.phone,
-                'logs': logs_data
+                'logs': logs_data,
+                'labels': labels,
+                'counts': counts
             }
         else:
             user_data = {
@@ -180,16 +203,52 @@ def analysis_log():
     page = request.args.get("page", type=int, default=1)
     kw = request.args.get("kw", type=str, default="")
 
-    log_list = Check_log.query.order_by(desc(Check_log.date))
-
+    # log_list = Check_log.query.order_by(desc(Check_log.date))
+    
+    # log_list = (
+    #     db.session.query(Check_log, Medicine.name).join(Medicine, Check_log.class_id == Medicine.class_id).order_by(desc(Check_log.date))
+    # )
+    
+    # query = db.session.query(
+    #     Check_log.check_log_id,
+    #     Check_log.user_id,
+    #     Check_log.img_id,
+    #     Medicine.name.label('medicine_name'),
+    #     Check_log.x,
+    #     Check_log.y,
+    #     Check_log.width,
+    #     Check_log.height,
+    #     Check_log.rate,
+    #     Check_log.date
+    # ).join(Check_log, Check_log.class_id == Medicine.class_id)
+    
+    subquery = Check_log.query.subquery()
+    log_list = db.session.query(
+        subquery.c.check_log_id,
+        subquery.c.user_id,
+        subquery.c.img_id,
+        subquery.c.class_id,
+        subquery.c.x,
+        subquery.c.y,
+        subquery.c.width,
+        subquery.c.height,
+        subquery.c.rate,
+        subquery.c.date,
+        Medicine.name.label('medicine_name')
+    ).join(Medicine, Medicine.class_id == subquery.c.class_id)
+    
     if kw:
         search = "%%{}%%".format(kw)
-        log_list = log_list.filter(Check_log.check_log_id.ilike(search))
+        # log_list = log_list.filter(Check_log.check_log_id.ilike(search))
+        # query = query.filter(Check_log.check_log_id.ilike(search))
+        log_list = log_list.filter(subquery.c.check_log_id.ilike(search)).distinct()
         
     log_list = log_list.paginate(page=page, per_page=10)
+    # log_list = query.paginate(page=page, per_page=10)
+    
     
     # UTC 시각을 한국 시각으로 변환
-    for log in log_list.items:
-        log.date = log.date.replace(tzinfo=timezone.utc).astimezone(timezone(timedelta(hours=9)))
+    # for log in log_list.items:
+    #     log.date = log.date.replace(tzinfo=timezone.utc).astimezone(timezone(timedelta(hours=9)))
 
     return render_template("page/analysis_log.html", current_menu="analysis_log", log_list=log_list, page=page, kw=kw) 

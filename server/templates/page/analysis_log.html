@@ -33,7 +33,7 @@
                         <td>{{ loop.index0 + 1 + (log_list.page - 1) * log_list.per_page }}</td>
                         <td class="text-center">{{ log.check_log_id }}</td>
                         <td>{{ log.date|customDate }}</td>
-                        <td>{{ log.class_id }}</td>
+                        <td>{{ log.medicine_name }}</td>
                         <td>{{ log.rate }}</td>
                     </tr>
                     {% endfor %}

@@ -40,10 +40,12 @@
                         <td>{{ loop.index0 + 1 + (user_list.page - 1) * user_list.per_page }}</td>
                         <td class="text-center">{{ user.user_id }}</td>
                         <td>
-                            <a href="{{ url_for('page.user_modify', user_id=user.user_id) }}" class="btn btn-outline-dark btn-sm">
+                            <a href="{{ url_for('page.user_modify', user_id=user.user_id) }}"
+                                class="btn btn-outline-dark btn-sm">
                                 <i class="bi bi-pencil-fill me-1"></i>수정
                             </a>
-                            <a href="javascript:void(0)" class="delete btn btn-outline-danger btn-sm" data-uri="{{ url_for('page.user_delete', user_id=user.user_id) }}">
+                            <a href="javascript:void(0)" class="delete btn btn-outline-danger btn-sm"
+                                data-uri="{{ url_for('page.user_delete', user_id=user.user_id) }}">
                                 <i class="bi bi-x-lg me-1"></i>삭제
                             </a>
                         </td>
@@ -89,7 +91,8 @@
                 <label class="col-auto col-form-label">성별</label>
                 <div class="col-auto">
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="gender" id="male" value="남성" checked disabled>
+                        <input class="form-check-input" type="radio" name="gender" id="male" value="남성" checked
+                            disabled>
                         <label class="form-check-label" for="male">남성</label>
                     </div>
                     <div class="form-check form-check-inline">
@@ -143,14 +146,19 @@
                     <tr class="text-center table-primary">
                         <th>번호</th>
                         <th>분석날짜</th>
-                        <th>태깅 의약품 class ID</th>
+                        <th>추측 약품</th>
                         <th>정확도</th>
                     </tr>
                 </thead>
-                <tbody id="recentLogsTableBody" class="text-center"></tbody>
+                <tbody id="recentLogsTableBody" class="text-center">
+
+                </tbody>
             </table>
 
-
+            <div class="mt-3">
+                <p class="fw-bold">약품별 분석횟수</p>
+                <canvas id="medicine_count"></canvas>
+            </div>
 
         </div>
     </div>
@@ -214,6 +222,11 @@
 {% endblock %}
 
 {% block script %}
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
 <script type="text/javascript">
 
     /* 페이징 */
@@ -259,7 +272,7 @@
 
     /* 날짜 포맷팅 */
     function formatDate(date) {
-        
+
         if (!date) {
             return "";
         }
@@ -306,6 +319,8 @@
 
     const editBtn = document.getElementById("editBtn");
     const deleteBtn = document.getElementById("deleteBtn");
+
+    const medicine_count = document.getElementById('medicine_count');
 
     let selectedRow = null;
 
@@ -357,6 +372,7 @@
 
                         // 최근 이력 추가
                         if (data.logs && data.logs.length > 0) {
+
                             data.logs.forEach(function (log, index) {
                                 const row = recentLogsTableBody.insertRow();
                                 const cell1 = row.insertCell(0);
@@ -366,9 +382,75 @@
 
                                 cell1.textContent = index + 1;
                                 cell2.textContent = formatDate2(log.date);
-                                cell3.textContent = log.class_id;
+                                // cell3.textContent = log.class_id;
+                                cell3.textContent = log.medicine_name;
                                 cell4.textContent = log.rate;
                             })
+
+                            // 기존에 생성된 Chart 파괴
+                            if (window.myChart) {
+                                window.myChart.destroy();
+                            }
+
+                            // 새로운 Chart 생성
+                            window.myChart = new Chart(medicine_count, {
+                                plugins: [ChartDataLabels],
+                                type: 'bar',
+                                data: {
+                                    labels: data.labels,
+                                    datasets: [{
+                                        label: '회',
+                                        data: data.counts,
+                                        datalabels: {
+                                            anchor: 'end',
+                                            align: 'start'
+                                        }
+                                    }]
+                                },
+                                options: {
+                                    plugins: {
+
+                                        tooltip: {
+                                            enabled: false
+                                        },
+
+                                        datalabels: {
+                                            color: 'black',
+                                            display: function(context) {
+                                                return context.dataset.data;
+                                            },
+                                            font: {
+                                                weight: 'bold',
+                                                size: 14
+                                            }
+                                        }
+                                    },
+
+
+                                    maxBarThickness: 50,
+                                    scales: {
+                                        x: {
+                                            ticks: {
+                                                autoSkip: false,
+                                                maxRotation: 0,
+                                                minRotation: 0,
+                                            }
+                                        },
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                stepSize: 1
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+
+                        } else {
+
+                            if (window.myChart) {
+                                window.myChart.destroy();
+                            }
                         }
                     }
                 })
