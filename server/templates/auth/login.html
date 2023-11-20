@@ -9,7 +9,6 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
 
-
     <!-- pybo CSS -->
     <!--
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -19,23 +18,33 @@
 </head>
 
 <body>
-    <div class="container my-5">
-        <h5 class="my-3 border-bottom pb-2 fw-bold">로그인</h5>
-        <form method="post">
-            {{ form.csrf_token }}
-            {% include "form_errors.html" %}
-            <div class="mb-3">
-                <label for="user_id">아이디</label>
-                <input type="text" class="form-control w-50" name="user_id" id="user_id" value="{{ form.user_id.data or '' }}">
-            </div>
-            <div class="mb-3">
-                <label for="password">비밀번호</label>
-                <input type="password" class="form-control w-50" name="password" id="password" value="{{ form.password.data or '' }}">
-            </div>
-            <button type="submit" class="btn btn-primary mb-3">로그인</button>
-        </form>
 
-        <a href="{{ url_for('auth.signup') }}">테스트 계정 생성</a>
+    <div class="d-flex align-items-center vh-100 flex-column justify-content-center">
+
+        <div class="text-center mb-4">
+            <h4 class="my-3 fw-bold">KnowMedicine 관리자 시스템</h4>
+        </div>
+
+        <div class="container col-2">
+            <form method="post">
+                {{ form.csrf_token }}
+                {% include "form_errors.html" %}
+
+                <div class="form-group mb-2">
+                    <input type="text" class="form-control" name="user_id" id="user_id" value="{{ form.user_id.data or '' }}" placeholder="아이디">
+                </div>
+
+                <div class="mb-3">
+                    <input type="password" class="form-control" name="password" id="password" value="{{ form.password.data or '' }}" placeholder="비밀번호">
+                </div>
+
+                <button type="submit" class="btn btn-primary mb-3 w-100 fw-bolder">로그인</button>
+            </form>
+
+
+            <a href="{{ url_for('auth.signup') }}">테스트 계정 생성</a>
+        </div>
+
     </div>
 
     <!-- Bootstrap JS -->

@@ -1,14 +1,15 @@
+import json
 from flask import Blueprint, url_for, render_template, flash, request, session, g, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 
 from server import db
 from server.forms import UserCreateForm, UserDetailForm
-from server.models import Medicine, User, Check_log
+from server.models import Medicine, Tag_set, User, Check_log
 from server.views.auth_views import login_required
-from sqlalchemy import desc
+from sqlalchemy import desc, func, cast, Integer
 
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 bp = Blueprint("page", __name__, url_prefix="/page")
 
@@ -16,9 +17,77 @@ bp = Blueprint("page", __name__, url_prefix="/page")
 @bp.route("/dashboard/")
 @login_required
 def dashboard():
-    # TODO: 데이터베이스에서 필요한 정보 불러오기
+    taggedCnt = Medicine.query.filter(Medicine.class_id != None).count()
+    nonTaggedCnt = Medicine.query.filter(Medicine.class_id == None).count()
+    dailyUsage = get_daily_usage()
+    monthlyUsage = get_monthly_usage()
+    medImgs = get_med_imgs()
 
-    return render_template("page/dashboard.html", current_menu="dashboard")
+    return render_template("page/dashboard.html", current_menu="dashboard", 
+                           taggedCnt=taggedCnt, nonTaggedCnt=nonTaggedCnt,
+                           dailyUsage=dailyUsage, monthlyUsage=monthlyUsage,
+                           medImgs=medImgs)
+
+
+def get_daily_usage():
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=4)
+    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+    daily_usage = db.session.query(func.date(Check_log.date).label('date'), func.count().label('count')) \
+        .filter(Check_log.date >= start_date, Check_log.date <= end_date ) \
+        .group_by(func.date(Check_log.date)) \
+        .all()
+    
+    results = [(row.date.strftime('%Y-%m-%d'), row.count) for row in daily_usage]
+    results = json.dumps(results)
+    
+    return results
+
+
+def get_monthly_usage():
+    end_month = datetime.utcnow().month
+    start_month = end_month - 4 if end_month > 4 else 1
+    
+    monthly_usage = db.session.query(func.extract('month', Check_log.date).label('month'), func.count().label('count')) \
+        .filter(func.extract('month', Check_log.date) >= start_month, func.extract('month', Check_log.date) <= end_month) \
+        .group_by(func.extract('month', Check_log.date)) \
+        .all()
+        
+    results = [tuple(row) for row in monthly_usage]
+    results = json.dumps(results)
+    
+    return results
+
+
+def get_med_imgs():
+    # med_imgs = db.session.query(Tag_set.class_id, func.count().label('count')) \
+    #     .group_by(Tag_set.class_id) \
+    #     .order_by(cast(Tag_set.class_id, Integer).asc()) \
+    #     .all()
+    
+    # med_imgs = db.session.query(Medicine.name, func.count().label('count')) \
+    #     .join(Tag_set, Medicine.class_id == Tag_set.class_id) \
+    #     .group_by(Medicine.name) \
+    #     .order_by(cast(Tag_set.class_id, Integer).asc()) \
+    #     .limit(10) \
+    #     .all()
+    
+    subquery = db.session.query(Medicine.name, func.count().label('count')) \
+        .join(Tag_set, Medicine.class_id == Tag_set.class_id) \
+        .group_by(Medicine.name) \
+        .order_by(desc('count')) \
+        .limit(10) \
+        .subquery()
+
+    med_imgs = db.session.query(subquery.c.name, subquery.c.count) \
+        .order_by(desc(subquery.c.count)) \
+        .all()
+    
+    results = [tuple(row) for row in med_imgs]
+    results = json.dumps(results)
+    
+    return results
 
 
 @bp.route("/medicine_list/")

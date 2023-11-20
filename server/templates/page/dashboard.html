@@ -3,57 +3,85 @@
 
 <h2 class="border-bottom py-3 m-3">대시보드</h2>
 
-<div class="p-3 border">
-    <div class="row">
-        <div class="col border">
-            ▶ 모델별 평균 정확도
+<div class="p-3">
+    <div class="row mb-3">
+        <div class="col card me-3">
             <canvas id="avg_acc"></canvas>
         </div>
-        <div class="col border">
-            ▶ 태그 데이터 비율
+        <div class="col card me-3">
             <canvas id="tag_ratio"></canvas>
         </div>
-        <div class="col border">
-            ▶ 일일 사용량
+        <div class="col card me-3">
             <canvas id="daily_usage"></canvas>
         </div>
     </div>
     <div class="row">
-        <div class="col border">
-            ▶ 의약품별 보유 이미지
+        <div class="col card me-3">
             <canvas id="med_img"></canvas>
         </div>
-        <div class="col border">
-            ▶ 월별 사용량
+        <div class="col card me-3">
             <canvas id="monthly_usage"></canvas>
         </div>
     </div>
 </div>
 
+<div id="chartData" data-taggedCnt="{{ taggedCnt }}" data-nonTaggedCnt="{{ nonTaggedCnt }}"
+                    data-dailyUsage="{{ dailyUsage }}" data-monthlyUsage="{{ monthlyUsage }}"
+                    data-medImgs="{{ medImgs }}"></div>
+
 {% endblock %}
 
 {% block script %}
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
 <script type="text/javascript">
     const avg_acc = document.getElementById('avg_acc');
     const tag_ratio = document.getElementById('tag_ratio');
     const daily_usage = document.getElementById('daily_usage');
     const med_img = document.getElementById('med_img');
-    const monthly_usage = document.getElementById('monthly_usage')
+    const monthly_usage = document.getElementById('monthly_usage');
 
+    var chartData = document.getElementById('chartData');
+
+    /* 모델별 평균 정확도 */
     new Chart(avg_acc, {
+        plugins: [ChartDataLabels],
         type: 'bar',
         data: {
             labels: ['모델1', '모델2', '모델3'],
             datasets: [{
-                label: 'accuracy(%)',
+                label: '평균 정확도(%)',
                 data: [70, 88, 64],
+                datalabels: {
+                    anchor: 'end',
+                    align: 'start'
+                }
             }]
         },
         options: {
+            plugins: {
+                tooltip: {
+                    enabled: false
+                },
+                datalabels: {
+                    color: 'black',
+                    font: {
+                        weight: 'bold',
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '모델별 평균 정확도',
+                    font: {
+                        size: 15
+                    },
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            },
             maxBarThickness: 50,
             scales: {
                 y: {
@@ -64,28 +92,108 @@
 
     });
 
+    /* 태그 데이터 비율 */
+    var taggedCnt = chartData.getAttribute('data-taggedCnt');
+    var nonTaggedCnt = chartData.getAttribute('data-nonTaggedCnt');
+
     new Chart(tag_ratio, {
+        plugins: [ChartDataLabels],
         type: 'doughnut',
         data: {
             labels: ['태그 데이터', '미태그 데이터'],
             datasets: [{
-                data: [20, 80],
-            }]
-        },
-    });
-
-    new Chart(daily_usage, {
-        type: 'line',
-        data: {
-            labels: ['2023-11-01', '2023-11-02', '2023-11-03', '2023-11-04'],
-            datasets: [{
-                label: '일일 사용량',
-                data: [10, 70, 50, 60],
-                fill: true,
-
+                data: [taggedCnt, nonTaggedCnt],
+                datalabels: {
+                    anchor: 'center'
+                },
             }]
         },
         options: {
+            plugins: {
+                tooltip: {
+                    enabled: false
+                },
+                datalabels: {
+                    backgroundColor: function (context) {
+                        return context.dataset.backgroundColor;
+                    },
+                    borderColor: 'white',
+                    borderRadius: 25,
+                    borderWidth: 2,
+                    color: 'white',
+                    display: function (context) {
+                        var dataset = context.dataset;
+                        var count = dataset.data.length;
+                        var value = dataset.data[context.dataIndex]
+                        return value
+                    },
+                    font: {
+                        weight: 'bold',
+                        size: 15
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '태그 데이터 비율',
+                    font: {
+                        size: 15
+                    },
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    /* 일일 사용량 */
+    var dailyUsage = JSON.parse(chartData.getAttribute('data-dailyUsage'));
+    var dailyLabels = dailyUsage.map(entry => entry[0]);
+    var dailyDatas = dailyUsage.map(entry => entry[1]);
+
+    new Chart(daily_usage, {
+        plugins: [ChartDataLabels],
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: '일일 사용량',
+                data: dailyDatas,
+                datalabels: {
+                    align: 'end',
+                    anchor: 'end',
+                },
+                fill: true,
+            }]
+        },
+        options: {
+            plugins: {
+                tooltip: {
+                    enabled: false
+                },
+                datalabels: {
+                    backgroundColor: function (context) {
+                        return context.dataset.backgroundColor;
+                    },
+                    borderRadius: 4,
+                    color: 'black',
+                    font: {
+                        weight: 'bold',
+                        size: 15
+                    },
+                },
+                title: {
+                    display: true,
+                    text: '일일 사용량',
+                    font: {
+                        size: 15
+                    },
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            },
+
             scales: {
                 y: {
                     beginAtZero: true,
@@ -94,36 +202,103 @@
         }
     });
 
+    /* 의약품별 보유 이미지 */
+    var medImgs = JSON.parse(chartData.getAttribute('data-medImgs'))
+    var imgLabels = medImgs.map(entry => entry[0]);
+    var imgDatas = medImgs.map(entry => entry[1]);
+
     new Chart(med_img, {
+        plugins: [ChartDataLabels],
         type: 'bar',
         data: {
-            labels: ['음성', '양성', '뒷면', '타이레놀', '캐롤비', '래피콜콜드', '이지엔', '베아제'],
+            labels: imgLabels,
             datasets: [{
                 label: '개',
-                data: [120, 133, 500, 679, 467, 542, 134, 552, 164],
+                data: imgDatas,
+                datalabels: {
+                    anchor: 'end',
+                    align: 'start'
+                }
             }]
         },
         options: {
+            plugins: {
+                tooltip: {
+                    enabled: false
+                },
+                datalabels: {
+                    color: 'black',
+                    font: {
+                        weight: 'bold',
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '의약품별 보유 이미지',
+                    font: {
+                        size: 15
+                    },
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true
                 }
-            }
+            },
+
         }
     });
 
+    /* 월간 사용량 */
+    var monthlyUsage = JSON.parse(chartData.getAttribute('data-monthlyUsage'));
+    var monthlyLabels = monthlyUsage.map(entry => entry[0] + '월');
+    var monthlyDatas = monthlyUsage.map(entry => entry[1]);
+
     new Chart(monthly_usage, {
+        plugins: [ChartDataLabels],
         type: 'line',
         data: {
-            labels: ['9', '10', '11', '12'],
+            labels: monthlyLabels,
             datasets: [{
                 label: '월별 사용량',
-                data: [460, 640, 359, 679],
+                data: monthlyDatas,
+                datalabels: {
+                    align: 'end',
+                    anchor: 'end',
+                },
                 fill: true,
-
             }]
         },
         options: {
+            plugins: {
+                tooltip: {
+                    enabled: false
+                },
+                datalabels: {
+                    backgroundColor: function (context) {
+                        return context.dataset.backgroundColor;
+                    },
+                    borderRadius: 4,
+                    color: 'black',
+                    font: {
+                        weight: 'bold',
+                        size: 15
+                    },
+                },
+                title: {
+                    display: true,
+                    text: '월간 사용량',
+                    font: {
+                        size: 15
+                    },
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -131,7 +306,6 @@
             }
         }
     });
-
 
 </script>
 {% endblock %}
