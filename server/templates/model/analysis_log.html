@@ -4,53 +4,54 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h2 class="border-bottom py-3 m-3">이미지 목록</h2>
+<h2 class="border-bottom py-3 m-3">분석 로그</h2>
 
 <div class="py-3 m-3">
     <div class="row p-3">
-        <div class="col-3 p-3">
+        <div class="col-5 p-3">
             <!-- 검색 -->
             <div class="input-group mb-3">
-                <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
+                <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or '' }}">
                 <div class="input-group-append">
                     <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>
                 </div>
             </div>
 
-            <!-- 약품 목록 -->
+            <!-- 로그 목록 -->
             <table class="table table-hover table-bordered">
                 <thead>
                     <tr class="text-center table-primary">
                         <th>번호</th>
-                        <th>ID</th>
-                        <th>학습횟수</th>
+                        <th>분석로그 ID</th>
+                        <th>일시</th>
+                        <th>유저</th>
+                        <th>평균 정확도</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    {% if using_dataset.total > 0 %}
-                    {% for dataset in using_dataset.items %}
-                    <tr class="text-center" data-imgId="{{ dataset.img_id }}">
-                        <td id="datasetList">
-                            <input class="form-check-input" type="checkbox" value="{{dataset.img_id}}" id="flexCheckDefault">
-                        </td>
-                        <td class="text-center">{{ dataset.img_id }}</td>
-                        <td>{{dataset.train_cnt}}</td>
+                    {% if log_list.total > 0 %}
+                    {% for log in log_list.items %}
+                    <tr class="text-center" data-checkLogId="{{ log.img_id }}">
+                        <td>{{ loop.index0 + 1 + (log_list.page - 1) * log_list.per_page }}</td>
+                        <td class="text-center">{{ log.img_id }}</td>
+                        <td>{{ log.date|customDate }}</td>
+                        <td>{{ log.user_id }}</td>
+                        <td>{{ (log.average_rate * 100)|round(2) }}</td>
                     </tr>
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
+                        <td colspan="5" class="text-center">분석 로그 정보가 없습니다.</td>
                     </tr>
                     {% endif %}
                 </tbody>
             </table>
-            <!-- 약품 상세 정보 -->
-            
+
             <div class="mb-3">
                 
                 <button type="submit" onclick="modDataSubmit()" class="btn btn-primary mb-3" style="float: right;">
-                    저장
+                    학습 데이터로 저장
                 </button>
                 <button id="modify" onclick="modifyToggle(this);" type="button" class="btn btn-outline-success" style="float: right;">
                     수정
@@ -61,62 +62,8 @@
             </div>
         </div>
 
-        <div class="col-3 p-3">
-            <!-- 검색 -->
-            <div class="input-group mb-3">
-                <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>
-                </div>
-            </div>
-
-            <!-- 약품 목록 -->
-            <table class="table table-hover table-bordered">
-                <thead>
-                    <tr class="text-center table-primary">
-                        <th>번호</th>
-                        <th>ID</th>
-                        <th>학습횟수</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% if n_dataset.total > 0 %}
-                    {% for dataset in n_dataset.items %}
-                    <tr class="text-center" data-imgId="{{ dataset.img_id }}">
-                        <td id="noneDataset">
-                            <input class="form-check-input" type="checkbox" value="{{dataset.img_id}}" id="flexCheckDefault">
-                        </td>
-                        <td class="text-center">{{ dataset.img_id }}</td>
-                        <td>{{dataset.train_cnt}}</td>
-                    </tr>
-                    {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-            <!-- 약품 상세 정보 -->
-            
-            <div class="mb-3">
-                
-                <button type="submit" onclick="modDataSubmit()" class="btn btn-primary mb-3" style="float: right;">
-                    저장
-                </button>
-                <button id="modify" onclick="modifyToggle(this);" type="button" class="btn btn-outline-success" style="float: right;">
-                    수정
-                </button>
-                <button id="addTag" onclick="add_tag();" type="button" class="btn btn-primary mb-3" style="float: right;">
-                    태그 추가
-                </button>
-            </div>
-        </div>
-        
-        
-        <div class="col-6 container border p-3">
-            
+        <!-- 로그 상세 정보 -->
+        <div class="col-6 card border p-3 ms-4">
             <div class="mb-3">
                 <p class="fw-bold">
                     <select class="form-control" id="ClassNameList" onchange="selectChange()">
@@ -138,15 +85,14 @@
             </div>
 
         </div>
-
     </div>
 
     <!-- 페이징 -->
     <ul class="pagination justify-content-center mt-5">
         <!-- 이전 페이지 -->
-        {% if using_dataset.has_prev %}
+        {% if log_list.has_prev %}
         <li class="page-item">
-            <a class="page-link" data-page="{{ using_dataset.prev_num }}" href="javascript:void(0)">이전</a>
+            <a class="page-link" data-page="{{ log_list.prev_num }}" href="javascript:void(0)">이전</a>
         </li>
         {% else %}
         <li class="page-item disabled">
@@ -155,9 +101,9 @@
         {% endif %}
 
         <!-- 숫자 페이지 -->
-        {% for page_num in using_dataset.iter_pages() %}
+        {% for page_num in log_list.iter_pages() %}
         {% if page_num %}
-        {% if page_num != using_dataset.page %}
+        {% if page_num != log_list.page %}
         <li class="page-item">
             <a class="page-link" data-page="{{ page_num }}" href="javascript:void(0)">{{ page_num }}</a>
         </li>
@@ -174,9 +120,9 @@
         {% endfor %}
 
         <!-- 다음 페이지 -->
-        {% if using_dataset.has_next %}
+        {% if log_list.has_next %}
         <li class="page-item">
-            <a class="page-link" data-page="{{ using_dataset.next_num }}" href="javascript:void(0)">다음</a>
+            <a class="page-link" data-page="{{ log_list.next_num }}" href="javascript:void(0)">다음</a>
         </li>
         {% else %}
         <li class="page-item disabled">
@@ -186,10 +132,11 @@
     </ul>
 </div>
 
+
 <!-- 검색 폼 -->
-<form id="searchForm" method="get" action="{{ url_for('model.data_list') }}">
+<form id="searchForm" method="get" action="{{ url_for('model.analysis_log') }}">
     <input type="hidden" id="kw" name="kw" value="{{ kw or '' }}">
-    <input type="hidden" id="page" name="page" value="{{ page }}">
+    <input type="hidden" id="page" name="page" vluae="{{ page }}">
 </form>
 
 {% endblock %}
@@ -227,7 +174,8 @@
     var btn_index = 0;
     var img_size;
     var modifyMode = false;
-    const rows = document.querySelectorAll('tr[data-imgId]');
+
+    const rows = document.querySelectorAll('tr[data-checkLogId]');
     const nameArea = document.getElementById('ClassNameList');
     const imgArea = document.getElementById('img');
     const usageTextarea = document.getElementById('usage');
@@ -358,7 +306,7 @@
         
         // 태그데이터 초기화
         const tag = {
-            'tag_id':"",
+            'check_log_id':"",
             'name':document.getElementById("ClassNameList").options[document.getElementById("ClassNameList").selectedIndex].text,
             'class_id': document.getElementById("ClassNameList").value,
             'left': 0,
@@ -372,7 +320,7 @@
         activeClear();
         label.classList.add('btn', 'btn-outline-secondary', 'active');
         
-        label.id = tag.tag_id;
+        label.id = tag.check_log_id;
 
         // 전체 버튼의 개수
         const index = buttonBox.querySelectorAll('*').length;
@@ -392,9 +340,9 @@
     }
     rows.forEach(function (row) {
         row.addEventListener('click', function () {
-            const imgId = this.getAttribute('data-imgId');
+            const imgId = this.getAttribute('data-checkLogId');
 
-            fetch(`/model/data_detail/${imgId}`)
+            fetch(`/model/log_detail/${imgId}`)
                 .then(response => response.json())
                 .then(data => {
                     if ('error' in data) {
@@ -420,7 +368,7 @@
 
                             label.classList.add('btn', 'btn-outline-secondary');
                             
-                            label.id = tag.tag_id;
+                            label.id = tag.check_log_id;
                             
                             label.textContent = 'TAG ' + i;
                             
@@ -446,7 +394,7 @@
         if (modifyMode){
             modifyToggle(document.getElementById('modify'));
         }
-        fetch(`/model/tag_save/`, {
+        fetch(`/model/log_to_tag/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

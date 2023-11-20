@@ -8,7 +8,7 @@
 
 <div class="py-3 m-3">
     <div class="row p-3">
-        <div class="col-3 p-3">
+        <div class="col-5 p-3">
             <!-- 검색 -->
             <div class="input-group mb-3">
                 <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
@@ -31,62 +31,7 @@
                     {% if using_dataset.total > 0 %}
                     {% for dataset in using_dataset.items %}
                     <tr class="text-center" data-imgId="{{ dataset.img_id }}">
-                        <td id="datasetList">
-                            <input class="form-check-input" type="checkbox" value="{{dataset.img_id}}" id="flexCheckDefault">
-                        </td>
-                        <td class="text-center">{{ dataset.img_id }}</td>
-                        <td>{{dataset.train_cnt}}</td>
-                    </tr>
-                    {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-            <!-- 약품 상세 정보 -->
-            
-            <div class="mb-3">
-                
-                <button type="submit" onclick="modDataSubmit()" class="btn btn-primary mb-3" style="float: right;">
-                    저장
-                </button>
-                <button id="modify" onclick="modifyToggle(this);" type="button" class="btn btn-outline-success" style="float: right;">
-                    수정
-                </button>
-                <button id="addTag" onclick="add_tag();" type="button" class="btn btn-primary mb-3" style="float: right;">
-                    태그 추가
-                </button>
-            </div>
-        </div>
-
-        <div class="col-3 p-3">
-            <!-- 검색 -->
-            <div class="input-group mb-3">
-                <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>
-                </div>
-            </div>
-
-            <!-- 약품 목록 -->
-            <table class="table table-hover table-bordered">
-                <thead>
-                    <tr class="text-center table-primary">
-                        <th>번호</th>
-                        <th>ID</th>
-                        <th>학습횟수</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% if n_dataset.total > 0 %}
-                    {% for dataset in n_dataset.items %}
-                    <tr class="text-center" data-imgId="{{ dataset.img_id }}">
-                        <td id="noneDataset">
-                            <input class="form-check-input" type="checkbox" value="{{dataset.img_id}}" id="flexCheckDefault">
-                        </td>
+                        <td>{{ loop.index0 + 1 + (using_dataset.page - 1) * using_dataset.per_page }}</td>
                         <td class="text-center">{{ dataset.img_id }}</td>
                         <td>{{dataset.train_cnt}}</td>
                     </tr>
@@ -117,6 +62,7 @@
         
         <div class="col-6 container border p-3">
             
+
             <div class="mb-3">
                 <p class="fw-bold">
                     <select class="form-control" id="ClassNameList" onchange="selectChange()">
@@ -187,7 +133,7 @@
 </div>
 
 <!-- 검색 폼 -->
-<form id="searchForm" method="get" action="{{ url_for('model.data_list') }}">
+<form id="searchForm" method="get" action="{{ url_for('model.data_tag') }}">
     <input type="hidden" id="kw" name="kw" value="{{ kw or '' }}">
     <input type="hidden" id="page" name="page" value="{{ page }}">
 </form>

@@ -33,7 +33,7 @@
             </a>
         </li>
         <li>
-            <a href="{{ url_for('page.analysis_log') }}" class="nav-link {% if current_menu == 'analysis_log' %} active {% else %} text-white {% endif %}">
+            <a href="{{ url_for('model.analysis_log') }}" class="nav-link {% if current_menu == 'analysis_log' %} active {% else %} text-white {% endif %}">
                 <i class="bi bi-file-earmark-text me-2"></i>분석 로그
             </a>
         </li>
@@ -43,7 +43,7 @@
             </a>
         </li>
         <li>
-            <a href="#" class="nav-link text-white">
+            <a href="{{ url_for('model.data_tag') }}" class="nav-link {% if current_menu == 'data_tag' %} active {% else %} text-white {% endif %}">
                 <i class="bi bi-tags-fill me-2"></i>데이터 태깅
             </a>
         </li>

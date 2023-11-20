@@ -65,6 +65,13 @@ def yolo_img_predict(id, img):
         fname = "_".join([image_data['img_id'], fname_time])
         fname += ".png"
 
+        correct_rate = r.boxes.conf
+        label = r.boxes.cls
+
+        bbox_xyxy = r.boxes.xyxy.tolist()
+
+        # print(len(correct_rate))
+
         # 이미지 저장
         os.makedirs(head + path,exist_ok=True)
         cv2.imwrite(head + path + "/" + fname, img)
@@ -72,10 +79,7 @@ def yolo_img_predict(id, img):
         image_data['user_id'] = id
         image_data['img_dir'] = path + "/" + fname
 
-        correct_rate = r.boxes.conf
-        label = r.boxes.cls
 
-        bbox_xyxy = r.boxes.xyxy.tolist()
         
         # 이미지의 평균 정확도 계산
         image_data['rate'] = np.mean(np.array(correct_rate))
