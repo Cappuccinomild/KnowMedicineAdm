@@ -180,7 +180,9 @@ def user_detail(userId):
     user = User.query.get(userId)
     # check_log = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).first()
     # check_logs = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).all()
-    subquery = Check_log.query.filter_by(user_id=userId).subquery()
+    
+    # subquery = Check_log.query.filter_by(user_id=userId).subquery()
+    subquery = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).limit(10).subquery()
     
     check_logs = db.session.query(
         subquery.c.rate,
