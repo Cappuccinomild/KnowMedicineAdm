@@ -1,6 +1,15 @@
 <link href="{{url_for('static', filename='cropper.css')}}" rel="stylesheet">
 <script src="{{url_for('static', filename='cropper.js')}}"></script>
 
+<script type="module">
+    import DataTableModule from "{{ url_for('static', filename='data-table-module.js') }}";
+    const yTable = new DataTableModule();
+    yTable.initializeDataTable('yUseTableContainer', 'yUseDataTable', '/model/data_q_list/1/Y/_');
+
+    const nTable = new DataTableModule();
+    nTable.initializeDataTable('nUseTableContainer', 'nUseDataTable', '/model/data_q_list/1/N/_');
+</script>
+
 {% extends 'base.html' %}
 {% block content %}
 
@@ -8,7 +17,7 @@
 
 <div class="py-3 m-3">
     <div class="row p-3">
-        <div class="col-3 p-3">
+        <div class="col-3 p-3 ">
             <!-- 검색 -->
             <div class="input-group mb-3">
                 <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
@@ -18,45 +27,48 @@
             </div>
 
             <!-- 약품 목록 -->
-            <table class="table table-hover table-bordered">
-                <thead>
-                    <tr class="text-center table-primary">
-                        <th>번호</th>
-                        <th>ID</th>
-                        <th>학습횟수</th>
-                    </tr>
-                </thead>
+            <div id="yUseTableContainer" style="max-height: 80%; overflow-y: auto;">
+                <table class="table table-hover table-bordered table-responsive" style="height:200px; overflow-y: auto;">
+                    <thead style="position: sticky; top:0;">
+                        <tr class="text-center table-primary">
+                            <th><input class="form-check-input" type="checkbox" id="yCheckAll"></th>
+                            <th>ID</th>
+                            <th>학습횟수</th>
+                        </tr>
+                    </thead>
 
-                <tbody>
-                    {% if using_dataset.total > 0 %}
-                    {% for dataset in using_dataset.items %}
-                    <tr class="text-center" data-imgId="{{ dataset.img_id }}">
-                        <td id="datasetList">
-                            <input class="form-check-input" type="checkbox" value="{{dataset.img_id}}" id="flexCheckDefault">
-                        </td>
-                        <td class="text-center">{{ dataset.img_id }}</td>
-                        <td>{{dataset.train_cnt}}</td>
-                    </tr>
-                    {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+                    <tbody id="yUseDataTable">
+                        {% if using_dataset.total > 0 %}
+                        {% for dataset in using_dataset.items %}
+                        <tr class="text-center" data-imgId="{{ dataset.img_id }}">
+                            <td>
+                                <input train-yn="{{dataset.train_yn}}" class="form-check-input" type="checkbox" value="{{dataset.img_id}}" id="flexCheckDefault">
+                            </td>
+                            <td class="text-center">{{ dataset.img_id }}</td>
+                            <td>{{dataset.train_cnt}}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
             <!-- 약품 상세 정보 -->
             
             <div class="mb-3">
-                
+                <!-- 
                 <button type="submit" onclick="modDataSubmit()" class="btn btn-primary mb-3" style="float: right;">
                     저장
                 </button>
                 <button id="modify" onclick="modifyToggle(this);" type="button" class="btn btn-outline-success" style="float: right;">
                     수정
                 </button>
-                <button id="addTag" onclick="add_tag();" type="button" class="btn btn-primary mb-3" style="float: right;">
-                    태그 추가
+                -->
+                <button id="addTag" onclick="dataChange('Y');" type="button" class="btn btn-primary mb-3" style="float: right;">
+                    데이터 제거
                 </button>
             </div>
         </div>
@@ -71,45 +83,49 @@
             </div>
 
             <!-- 약품 목록 -->
-            <table class="table table-hover table-bordered">
-                <thead>
-                    <tr class="text-center table-primary">
-                        <th>번호</th>
-                        <th>ID</th>
-                        <th>학습횟수</th>
-                    </tr>
-                </thead>
+            <div id="nUseTableContainer" style="max-height: 80%; overflow-y: auto;">
+                <table class="table table-hover table-bordered table-responsive" style="height:200px; overflow-y: auto;">
+                    <thead>
+                        <tr class="text-center table-primary">
+                            <th><input class="form-check-input" type="checkbox" id="nCheckAll"></th>
+                            <th>ID</th>
+                            <th>학습횟수</th>
+                        </tr>
+                    </thead>
 
-                <tbody>
-                    {% if n_dataset.total > 0 %}
-                    {% for dataset in n_dataset.items %}
-                    <tr class="text-center" data-imgId="{{ dataset.img_id }}">
-                        <td id="noneDataset">
-                            <input class="form-check-input" type="checkbox" value="{{dataset.img_id}}" id="flexCheckDefault">
-                        </td>
-                        <td class="text-center">{{ dataset.img_id }}</td>
-                        <td>{{dataset.train_cnt}}</td>
-                    </tr>
-                    {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+                    <tbody id="yUseDataTable">
+                        {% if n_dataset.total > 0 %}
+                        {% for dataset in n_dataset.items %}
+                        <tr class="text-center" data-imgId="{{ dataset.img_id }}">
+                            <td id="noneDataset">
+                                <input train-yn="{{dataset.train_yn}}" class="form-check-input trainN" type="checkbox" value="{{dataset.img_id}}" id="flexCheckDefault">
+                            </td>
+                            <td class="text-center">{{ dataset.img_id }}</td>
+                            <td>{{dataset.train_cnt}}</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
             <!-- 약품 상세 정보 -->
             
             <div class="mb-3">
                 
+                <!-- 
                 <button type="submit" onclick="modDataSubmit()" class="btn btn-primary mb-3" style="float: right;">
                     저장
                 </button>
                 <button id="modify" onclick="modifyToggle(this);" type="button" class="btn btn-outline-success" style="float: right;">
                     수정
                 </button>
-                <button id="addTag" onclick="add_tag();" type="button" class="btn btn-primary mb-3" style="float: right;">
-                    태그 추가
+                -->
+                <button id="addTag" onclick="dataChange('N');" type="button" class="btn btn-primary mb-3" style="float: right;">
+                    데이터 추가
                 </button>
             </div>
         </div>
@@ -141,56 +157,12 @@
 
     </div>
 
-    <!-- 페이징 -->
-    <ul class="pagination justify-content-center mt-5">
-        <!-- 이전 페이지 -->
-        {% if using_dataset.has_prev %}
-        <li class="page-item">
-            <a class="page-link" data-page="{{ using_dataset.prev_num }}" href="javascript:void(0)">이전</a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <a class="page-link" tabindex="-1" aria-disabled="true" href="javascript:void(0)">이전</a>
-        </li>
-        {% endif %}
-
-        <!-- 숫자 페이지 -->
-        {% for page_num in using_dataset.iter_pages() %}
-        {% if page_num %}
-        {% if page_num != using_dataset.page %}
-        <li class="page-item">
-            <a class="page-link" data-page="{{ page_num }}" href="javascript:void(0)">{{ page_num }}</a>
-        </li>
-        {% else %}
-        <li class="page-item active" aria-current="page">
-            <a class="page-link" href="#">{{ page_num }}</a>
-        </li>
-        {% endif %}
-        {% else %}
-        <li class="disabled">
-            <a class="page-link" href="javascript:void(0)">...</a>
-        </li>
-        {% endif %}
-        {% endfor %}
-
-        <!-- 다음 페이지 -->
-        {% if using_dataset.has_next %}
-        <li class="page-item">
-            <a class="page-link" data-page="{{ using_dataset.next_num }}" href="javascript:void(0)">다음</a>
-        </li>
-        {% else %}
-        <li class="page-item disabled">
-            <a class="page-link" tabindex="-1" aria-disabled="true" href="javascript:void(0)">다음</a>
-        </li>
-        {% endif %}
-    </ul>
 </div>
-
-<!-- 검색 폼 -->
+<!-- 
 <form id="searchForm" method="get" action="{{ url_for('model.data_list') }}">
     <input type="hidden" id="kw" name="kw" value="{{ kw or '' }}">
     <input type="hidden" id="page" name="page" value="{{ page }}">
-</form>
+</form> -->
 
 {% endblock %}
 {% block script %}
@@ -466,5 +438,52 @@
         });
     }
 
+    function dataChange(train_yn){
+        
+        let data_list = [];
+        
+        document.querySelectorAll(`[train-yn="${train_yn}"]:checked`).forEach(function (item) {
+            data_list.push(item.value);
+        });
+
+        fetch("/model/yn_change/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                now: train_yn,
+                data: data_list
+            }),
+        }).then((data) => {
+            // 성공적으로 JSON 데이터를 받았을 때
+            console.log(data); // 받은 데이터를 로그에 출력
+            alert('성공적으로 저장되었습니다.');
+            location.reload();
+        })
+        .catch((error) => {
+            // 오류가 발생했을 때
+            console.error('오류 발생:', error);
+            alert('저장에 실패했습니다. 다시 시도해주세요.');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkAllYCheckbox = document.getElementById('yCheckAll');
+
+        checkAllYCheckbox.addEventListener('change', function () {
+            document.querySelectorAll('[train-yn="Y"]').forEach(function (checkbox) {
+                checkbox.checked = checkAllYCheckbox.checked;
+            });
+        });
+
+        const checkAllNCheckbox = document.getElementById('nCheckAll');
+
+        checkAllNCheckbox.addEventListener('change', function () {
+            document.querySelectorAll('[train-yn="N"]').forEach(function (checkbox) {
+                checkbox.checked = checkAllNCheckbox.checked;
+            });
+        });
+    });
 </script>
 {% endblock %}

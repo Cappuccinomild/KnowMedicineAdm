@@ -58,7 +58,7 @@ def data_list():
     #     search = "%%{}%%".format(using_kw)
     #     using_dataset = using_dataset.filter(Medicine.name.ilike(search))
         
-    using_dataset = using_dataset.paginate(page=page, per_page=10)
+    using_dataset = using_dataset.paginate(page=page, per_page=50)
 
     medicine_list = db.session.query(
         Medicine.class_id,
@@ -87,7 +87,82 @@ def data_list():
                            using_kw = using_kw,
                            medicine_list = medicine_list)
 
+@bp.route("/data_q_list/<int:page>/<string:train_yn>/<string:class_id>")
+@login_required
+def data_q_list(page, train_yn, class_id):
+    print(page, train_yn)
 
+    print(train_yn == "Y")
+    # train_yn이 Y인 경우를 불러올 경우
+    if train_yn == "Y":
+        
+        dataset = Img_set.query.filter(Img_set.train_yn == train_yn)
+
+        # if using_kw:
+        #     search = "%%{}%%".format(using_kw)
+        #     using_dataset = using_dataset.filter(Medicine.name.ilike(search))
+            
+        dataset = dataset.paginate(page=page, per_page=50)
+
+    # train_yn이 N인 경우를 불러올 경우
+    # 태그 데이터가 존재하지 않거나 
+    elif train_yn == "N":
+
+        subquery = Img_set.query.filter(Img_set.train_yn == "N").subquery()
+        
+        dataset = db.session.query(
+            subquery.c.img_id,
+            subquery.c.date,
+            subquery.c.rate,
+            subquery.c.train_cnt,
+            subquery.c.train_yn
+        ).join(
+            Tag_set, Tag_set.img_id == subquery.c.img_id
+        ).group_by(subquery.c.img_id)
+
+        dataset = dataset.paginate(page=page, per_page=10)
+
+    else:
+        return make_response(jsonify({"resp": 'not allowed'}), 304)
+    
+    resp = {
+        "resp" : 200,
+        "data" : []
+    }
+
+    #출력 데이터 양식
+    for item in dataset.items:
+        resp["data"].append({
+            "img_id" : item.img_id,
+            "train_yn" : item.train_yn,
+            "train_cnt" : item.train_cnt
+        })
+
+    return jsonify(resp)
+
+@bp.route("/yn_change/", methods = ['POST'])
+@login_required
+def yn_change():
+    
+    print(request)
+    
+    data = request.get_json()
+    
+    if data['now'] == "Y":
+        to_change = "N"
+
+    elif data['now'] == "N":
+        to_change = "Y"
+
+    else:
+        return make_response("fail", 403)
+    
+    for img in Img_set.query.filter(Img_set.img_id.in_(data['data'])).all():
+        img.train_yn = to_change
+
+    db.session.commit()
+
+    return make_response("success", 200)
 
 @bp.route("/data_tag/")
 @login_required
