@@ -169,26 +169,44 @@ def yn_change():
 def data_tag():
     
     page = request.args.get("page", type=int, default=1)
-    using_kw = request.args.get("using_kw", type=str, default="")
+    kw = request.args.get("kw", type=str, default="")
     using_dataset = Img_set.query.filter(Img_set.train_yn == "Y")
 
-    # if using_kw:
-    #     search = "%%{}%%".format(using_kw)
-    #     using_dataset = using_dataset.filter(Medicine.name.ilike(search))
-        
+    if kw:
+        search = "%%{}%%".format(kw)
+
+        id_list = []
+        for item in Medicine.query.filter(Medicine.name.ilike(search)).all():
+            id_list.append(item.class_id)
+
+        subquery = Tag_set.query.filter(Tag_set.class_id.in_(id_list)).subquery()
+        using_dataset = db.session.query(
+            Img_set.img_id,
+            Img_set.user_id,
+            Img_set.img_dir,
+            Img_set.train_cnt,
+            Img_set.date,
+            Img_set.rate
+        ).select_from(Img_set).join(
+            subquery, Img_set.img_id == subquery.c.img_id
+        ).group_by(subquery.c.img_id)
     using_dataset = using_dataset.paginate(page=page, per_page=10)
 
     medicine_list = db.session.query(
         Medicine.class_id,
         Medicine.name
-    ).filter(Medicine.class_id != "").all()
+    )
+
+    medicine_list_using = medicine_list.filter(Medicine.class_id != "").all()
+    # medicine_list_all = medicine_list.all()
 
     return render_template("model/data_tag.html", 
                            current_menu="data_tag",
                            using_dataset = using_dataset,
                            page = page,
-                           using_kw = using_kw,
-                           medicine_list = medicine_list)
+                           kw = kw,
+                           medicine_list_using = medicine_list_using
+                           )
 
 @bp.route("/data_detail/<img_id>")
 @login_required
@@ -262,6 +280,8 @@ def tag_save():
     print(request)
     
     data = request.get_json()
+
+    print(data)
     
     tag_id_list = []
 
