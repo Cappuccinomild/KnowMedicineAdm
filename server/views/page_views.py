@@ -96,14 +96,19 @@ def medicine_list():
     
     page = request.args.get("page", type=int, default=1)
     kw = request.args.get("kw", type=str, default="")
-    medicine_list = Medicine.query.order_by(Medicine.name)
+    
+    t_medicine_list = Medicine.query.filter(Medicine.class_id != None).order_by(Medicine.name)  # class_id가 있는 약품
+    nt_medicine_list = Medicine.query.filter(Medicine.class_id == None).order_by(Medicine.name) # class_id가 없는 약품 
 
     if kw:
         search = "%%{}%%".format(kw)
-        medicine_list = medicine_list.filter(Medicine.name.ilike(search))
+        nt_medicine_list = nt_medicine_list.filter(Medicine.name.ilike(search))
         
-    medicine_list = medicine_list.paginate(page=page, per_page=10)
-    return render_template("page/medicine_list.html", current_menu="medicine_list", medicine_list=medicine_list, page=page, kw=kw)
+    nt_medicine_list = nt_medicine_list.paginate(page=page, per_page=10)
+    
+    return render_template("page/medicine_list.html", current_menu="medicine_list", 
+                           t_medicine_list=t_medicine_list, nt_medicine_list=nt_medicine_list,
+                           page=page, kw=kw)
 
 
 @bp.route("/medicine_detail/<string:medId>")
@@ -181,8 +186,8 @@ def user_detail(userId):
     # check_log = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).first()
     # check_logs = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).all()
     
-    # subquery = Check_log.query.filter_by(user_id=userId).subquery()
-    subquery = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).limit(10).subquery()
+    subquery = Check_log.query.filter_by(user_id=userId).subquery()
+    # subquery = Check_log.query.filter_by(user_id=userId).order_by(desc(Check_log.date)).limit(10).subquery()
     
     check_logs = db.session.query(
         subquery.c.rate,

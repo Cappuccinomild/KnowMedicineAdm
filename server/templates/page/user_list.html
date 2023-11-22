@@ -59,6 +59,7 @@
                 </tbody>
             </table>
         </div>
+        
 
         <!-- 유저 상세 정보 -->
         <div class="col-6 card border p-3 ms-4">
@@ -141,19 +142,21 @@
             </div>
             -->
 
-            <table class="table table-bordered">
-                <thead>
-                    <tr class="text-center table-primary">
-                        <th>번호</th>
-                        <th>분석날짜</th>
-                        <th>추측 약품</th>
-                        <th>정확도</th>
-                    </tr>
-                </thead>
-                <tbody id="recentLogsTableBody" class="text-center">
+            <div class="overflow-auto" style="max-height: 25%;">
+                <table class="table table-bordered">
+                    <thead class="sticky-top">
+                        <tr class="text-center table-primary">
+                            <th>번호</th>
+                            <th>분석날짜</th>
+                            <th>추측 약품</th>
+                            <th>정확도</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentLogsTableBody" class="text-center">
 
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
 
             <div class="mt-3">
                 <p class="fw-bold">약품별 분석횟수</p>
@@ -161,6 +164,7 @@
             </div>
 
         </div>
+    
     </div>
 
     <!-- 페이징 -->

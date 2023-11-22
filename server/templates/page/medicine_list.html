@@ -4,6 +4,7 @@
 <h2 class="border-bottom py-3 m-3">의약품 관리</h2>
 
 <div class="py-3 m-3">
+
     <div class="row p-3">
         <div class="col-5 p-3">
             <!-- 검색 -->
@@ -14,7 +15,46 @@
                 </div>
             </div>
 
-            <!-- 약품 목록 -->
+            <!-- 태깅된 약품 목록 -->
+            <p> class_id 가 있는 약품 </p>
+            <div class="mb-5" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-hover table-bordered">
+                    <thead class="sticky-top">
+                        <tr class="text-center table-primary">
+                            <th>번호</th>
+                            <th>약품명</th>
+                            <th>유형</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% if t_medicine_list %}
+                        {% for medicine in t_medicine_list %}
+                        <tr class="text-center" data-medId="{{ medicine.med_id }}">
+                            <td>{{ loop.index0 + 1 }}</td>
+                            <td class="text-center">{{ medicine.name }}</td>
+                            <td>
+                                {% if medicine.effect_type == 'N' %}
+                                약품
+                                {% elif medicine.effect_type == 'K' %}
+                                키트
+                                {% else %}
+                                기타
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 미태깅 약품 목록 -->
+            <p> class_id 가 없는 약품 </p>
             <table class="table table-hover table-bordered">
                 <thead>
                     <tr class="text-center table-primary">
@@ -25,10 +65,10 @@
                 </thead>
 
                 <tbody>
-                    {% if medicine_list.total > 0 %}
-                    {% for medicine in medicine_list.items %}
+                    {% if nt_medicine_list.total %}
+                    {% for medicine in nt_medicine_list.items %}
                     <tr class="text-center" data-medId="{{ medicine.med_id }}">
-                        <td>{{ loop.index0 + 1 + (medicine_list.page - 1) * medicine_list.per_page }}</td>
+                        <td>{{ loop.index0 + 1 + (nt_medicine_list.page - 1) * nt_medicine_list.per_page }}</td>
                         <td class="text-center">{{ medicine.name }}</td>
                         <td>
                             {% if medicine.effect_type == 'N' %}
@@ -48,38 +88,42 @@
                     {% endif %}
                 </tbody>
             </table>
+
         </div>
 
         <!-- 약품 상세 정보 -->
-        <div class="col-6 card border p-3 ms-4">
-            <div class="mb-3">
-                <p class="fw-bold" id="name"></p>
-            </div>
+        <div class="col-6 p-3 ms-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p class="fw-bold" id="name"></p>
+                    </div>
 
-            <div class="mb-3">
-                <label for="effect">효능</label>
-                <textarea class="form-control" id="effect" rows="3" style="resize:none;" readonly></textarea>
-            </div>
+                    <div class="mb-3">
+                        <label for="effect">효능</label>
+                        <textarea class="form-control" id="effect" rows="3" style="resize:none;" readonly></textarea>
+                    </div>
 
-            <div class="mb-3">
-                <label for="usage">용법</label>
-                <textarea class="form-control" id="usage" rows="3" style="resize:none;" readonly></textarea>
-            </div>
+                    <div class="mb-3">
+                        <label for="usage">용법</label>
+                        <textarea class="form-control" id="usage" rows="3" style="resize:none;" readonly></textarea>
+                    </div>
 
-            <div class="mb-3">
-                <label for="caution">주의사항</label>
-                <textarea class="form-control" id="caution" rows="6" style="resize:none;" readonly></textarea>
+                    <div class="mb-3">
+                        <label for="caution">주의사항</label>
+                        <textarea class="form-control" id="caution" rows="6" style="resize:none;" readonly></textarea>
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
 
     <!-- 페이징 -->
     <ul class="pagination justify-content-center mt-5">
         <!-- 이전 페이지 -->
-        {% if medicine_list.has_prev %}
+        {% if nt_medicine_list.has_prev %}
         <li class="page-item">
-            <a class="page-link" data-page="{{ medicine_list.prev_num }}" href="javascript:void(0)">이전</a>
+            <a class="page-link" data-page="{{ nt_medicine_list.prev_num }}" href="javascript:void(0)">이전</a>
         </li>
         {% else %}
         <li class="page-item disabled">
@@ -88,9 +132,9 @@
         {% endif %}
 
         <!-- 숫자 페이지 -->
-        {% for page_num in medicine_list.iter_pages() %}
+        {% for page_num in nt_medicine_list.iter_pages() %}
         {% if page_num %}
-        {% if page_num != medicine_list.page %}
+        {% if page_num != nt_medicine_list.page %}
         <li class="page-item">
             <a class="page-link" data-page="{{ page_num }}" href="javascript:void(0)">{{ page_num }}</a>
         </li>
@@ -107,9 +151,9 @@
         {% endfor %}
 
         <!-- 다음 페이지 -->
-        {% if medicine_list.has_next %}
+        {% if nt_medicine_list.has_next %}
         <li class="page-item">
-            <a class="page-link" data-page="{{ medicine_list.next_num }}" href="javascript:void(0)">다음</a>
+            <a class="page-link" data-page="{{ nt_medicine_list.next_num }}" href="javascript:void(0)">다음</a>
         </li>
         {% else %}
         <li class="page-item disabled">
@@ -117,6 +161,8 @@
         </li>
         {% endif %}
     </ul>
+
+
 </div>
 
 <!-- 검색 폼 -->
