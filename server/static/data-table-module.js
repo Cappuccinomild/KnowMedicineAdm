@@ -1,6 +1,14 @@
-class DataTableModule {
-    constructor() {
-        this.page = 1;
+import TagEditor from './cropper-tag.js';
+
+class DataTableModule extends TagEditor{
+    constructor(fetchLink, saveLink) {
+        super(fetchLink, saveLink);
+        this.page = {};
+        this.isLoading = false;
+
+        this.keyword = "";
+        this.tableContainer;
+        this.dataTable;
     }
 
     async fetchData(apiUrl) {
@@ -11,11 +19,13 @@ class DataTableModule {
             }
             return await response.json();
         } catch (error) {
+            this.isLoading=false;
             throw new Error(`Network error: ${error.message}`);
         }
     }
 
     appendDataToTable(data, tableElement) {
+        console.log(tableElement);
         data.forEach((item) => {
             const row = document.createElement('tr');
 
@@ -31,53 +41,8 @@ class DataTableModule {
             ${item.train_cnt}
             </td>`;
 
-            row.addEventListener('click', function () {
-                const imgId = this.getAttribute('data-imgId');
-    
-                fetch(`/model/data_detail/${imgId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if ('error' in data) {
-                            console.error(data.error);
-                        } else {
-    
-    
-                            // 수정모드가 켜져있을 경우 해제
-                            if (modifyMode){
-                                modifyToggle(document.getElementById('modify'));
-                            }
-                            
-                            cropper.replace(data.path);
-                            
-                            // 기존 버튼 제거
-                            buttonBox.innerHTML='';
-    
-                            tag_list = data;
-    
-                            let i = 0;
-                            for (const tag of tag_list.data){
-                                const label = document.createElement('label');
-    
-                                label.classList.add('btn', 'btn-outline-secondary');
-                                
-                                label.id = tag.tag_id;
-                                
-                                label.textContent = 'TAG ' + i;
-                                
-                                label.addEventListener('click', tagClick(label, i));
-                                // 버튼을 추가할 div에 버튼을 추가
-                                buttonBox.appendChild(label);
-                                if(i == 0){
-                                    label.classList.add('active');
-                                }
-                                i++;
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('약품 정보를 가져오는 중 오류 발생:', error)
-                    });
-            });
+            console.log(row);
+            row.addEventListener('click', (event) => super.handleRowClick(event));
             tableElement.appendChild(row);
         });
     }
@@ -89,45 +54,44 @@ class DataTableModule {
         );
     }
 
-    initializeDataTable(tableContainerId, dataTableId, apiUrl) {
+    initializeDataTable(apiUrl, tableContainerId, dataTableId, keyword) {
         const tableContainer = document.getElementById(tableContainerId);
         const dataTable = document.getElementById(dataTableId);
-        let isLoading = false;
+        this.keyword = keyword;
+        
+        // 테이블별 페이지 관리
+        this.page[tableContainerId] = 1;
 
-        let match = apiUrl.match(/\/model\/data_q_list\/(\d+)\/Y\//);
-
-        tableContainer.addEventListener('scroll', async () => {
-            if (!isLoading && this.isScrollAtBottom(tableContainer)) {
-                isLoading = true;
-                this.page += 1;
-                console.log(this.page);
-                if (match) {
-                    // 변경된 URL 생성
-                    match = apiUrl.match(/\/model\/data_q_list\/(\d+)\/Y\//);
-                    apiUrl = apiUrl.replace(match[1], this.page);
-                    console.log(apiUrl);
-                } else {
-                    console.error('URL 형식이 일치하지 않습니다.');
-                }
-
-                const newData = await this.fetchData(apiUrl);
-                this.appendDataToTable(newData.data, dataTable);
-                isLoading = false;
-            }
-        });
+        tableContainer.addEventListener('scroll', async () => { this.scrollEvent.bind(this, apiUrl, tableContainerId, tableContainer, dataTable)(); });
 
         // Adjust max-height
-        function adjustMaxHeight() {
+        const adjustMaxHeight = () => {
             const windowHeight = window.innerHeight;
             const newMaxHeight = windowHeight * 0.7; // 70%
             tableContainer.style.maxHeight = newMaxHeight + 'px';
-        }
-
+        };
         // Call adjustMaxHeight on window resize
         window.addEventListener('resize', adjustMaxHeight);
 
         // Initial adjustment
         adjustMaxHeight();
+    }
+
+    async scrollEvent(apiUrl, tableContainerId, tableContainer, dataTable){
+        if (!this.isLoading && this.isScrollAtBottom(tableContainer)) {
+            this.isLoading = true;
+            
+            // 테이블별 페이지 관리
+            this.page[tableContainerId] += 1;
+            const queryPage = this.page[tableContainerId];
+
+            
+            console.log(apiUrl + queryPage);
+            
+            const newData = await this.fetchData(apiUrl + queryPage + "/" + this.keyword);
+            this.appendDataToTable(newData.data, dataTable);
+            this.isLoading = false;
+        }
     }
 }
 

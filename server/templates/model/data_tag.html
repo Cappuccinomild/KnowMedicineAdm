@@ -13,8 +13,8 @@
             <div class="input-group mb-3">
                 <datalist id="medicine_list_all">
                     {% for medicine in medicine_list_using %}
-                            <option class-id="{{medicine.class_id}}" value="{{medicine.name}}"></option>
-                        {% endfor %}
+                        <option class-id="{{medicine.class_id}}" value="{{medicine.name}}"></option>
+                    {% endfor %}
                 </datalist>
                 <input type="text" list="medicine_list_all" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
                 <div class="input-group-append">

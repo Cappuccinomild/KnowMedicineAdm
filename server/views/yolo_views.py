@@ -8,6 +8,44 @@ from server.forms import UserCreateForm, UserDetailForm
 from server.models import Img_set, Tag_set, Medicine, Check_log, ID_seq
 from server.views.auth_views import login_required
 
+def del_tag(img_id):
+    # 사용 예시
+    # /static/yolo_model/datasets/train/images/image-0.jpg
+    # /static/image/202311/IMG_00005951_20231120_151321.png
+
+    head = './server'
+    label_path = '/static/yolo_model/datasets/train/labels/'
+
+    img_query = Img_set.query.get(img_id)
+
+    img_name = img_query.img_dir.split("/")[-1]
+    try:
+        seq_name, seq, yyyymmdd, picture = img_name.split("_")
+        img_path = f"/static/image/{yyyymmdd[:-2]}/"
+
+    except:
+        img_path = "/static/image/default/"    
+
+    import os
+    
+
+
+    # img 폴더에 저장되어있던 이미지 파일을
+    # dataset 폴더로 이동
+    os.replace(head + img_query.img_dir, head + img_path + img_name)
+    
+    # 이동한 이미지의 경로를 업데이트
+    img_query.img_dir = img_path + img_name
+    db.session.commit()
+    
+    # 태그를 입력하기 위한 파일을 open
+    tag_file = f'{head + label_path + img_name.split(".")[0]}.txt'
+    try:
+        os.remove(tag_file)
+    except:
+        print("file none")
+
+
 def tag_to_txt(img_id):
         
     import os
@@ -31,7 +69,7 @@ def tag_to_txt(img_id):
     db.session.commit()
     
     # 태그를 입력하기 위한 파일을 open
-    tag_file = img_name.split(".")[0]
+    tag_file = f'{img_name.split(".")[0]}.txt'
     f = open(head + label_path + tag_file, "w")
 
     # 6 0.388875 0.497333 0.617250 0.486000
@@ -42,30 +80,65 @@ def tag_to_txt(img_id):
     
     f.close()
 
+def get_id_from_keyword(keyword):
+    search = "%%{}%%".format(keyword)
+
+    # 키워드를 기반으로 class_id를 추출함
+    id_list = []
+    for item in Medicine.query.filter(Medicine.name.ilike(search)).all():
+        id_list.append(item.class_id)
+
+    subquery = Tag_set.query.filter(Tag_set.class_id.in_(id_list)).subquery()
+    using_dataset = db.session.query(
+        Img_set.img_id,
+        Img_set.user_id,
+        Img_set.img_dir,
+        Img_set.train_cnt,
+        Img_set.date,
+        Img_set.rate,
+        Img_set.train_yn
+    ).select_from(Img_set).join(
+        subquery, Img_set.img_id == subquery.c.img_id
+    ).group_by(subquery.c.img_id)
+
+    return using_dataset
 
 bp = Blueprint("model", __name__, url_prefix="/model")
 
-@bp.route("/data_list/")
+@bp.route("/data_list/", methods=['GET', 'POST'])
 @login_required
 def data_list():
     
-    page = request.args.get("page", type=int, default=1)
-    n_page = request.args.get("n_page", type=int, default=1)
-    using_kw = request.args.get("using_kw", type=str, default="")
+    params = request.form
+    y_keyword = ""
+    n_keyword = ""
+
+    print(params)
+    if(request.method =='POST'):
+        y_keyword = params['yKeyword']
+        n_keyword = params['nKeyword']
+    
+    # 현재 사용중인 데이터셋 추출
     using_dataset = Img_set.query.filter(Img_set.train_yn == "Y")
+    subquery = Img_set.query.filter(Img_set.train_yn == "N").subquery()
 
-    # if using_kw:
-    #     search = "%%{}%%".format(using_kw)
-    #     using_dataset = using_dataset.filter(Medicine.name.ilike(search))
+    if y_keyword:
+        using_dataset = get_id_from_keyword(y_keyword)
+
+        subquery = using_dataset.filter(Img_set.train_yn == "N").subquery()
+        using_dataset = using_dataset.filter(Img_set.train_yn == "Y")
         
-    using_dataset = using_dataset.paginate(page=page, per_page=50)
+    using_dataset = using_dataset.paginate(page=1, per_page=50)
 
+    # 의약품 목록 추출
     medicine_list = db.session.query(
         Medicine.class_id,
         Medicine.name
-    ).filter(Medicine.class_id != "").all()
+    )
 
-    subquery = Img_set.query.filter(Img_set.train_yn == "N").subquery()
+    medicine_list_using = medicine_list.filter(Medicine.class_id != "").all()
+
+    # 미사용 목록 추출
     
     n_dataset = db.session.query(
         subquery.c.img_id,
@@ -77,54 +150,26 @@ def data_list():
         Tag_set, Tag_set.img_id == subquery.c.img_id
     ).group_by(subquery.c.img_id)
 
-    n_dataset = n_dataset.paginate(page=n_page, per_page=10)
+    n_dataset = n_dataset.paginate(page=1, per_page=50)
 
     return render_template("model/data_list.html", 
                            current_menu="data_list",
                            using_dataset = using_dataset,
                            n_dataset = n_dataset,
-                           page = page,
-                           using_kw = using_kw,
-                           medicine_list = medicine_list)
+                           yKeyword = y_keyword,
+                           nKeyword = n_keyword,
+                           medicine_list_using = medicine_list_using)
 
-@bp.route("/data_q_list/<int:page>/<string:train_yn>/<string:class_id>")
+@bp.route("/data_q_list/<string:train_yn>/<int:page>/<string:keyword>")
+@bp.route("/data_q_list/<string:train_yn>/<int:page>/")
 @login_required
-def data_q_list(page, train_yn, class_id):
+def data_q_list(page, train_yn, keyword = ""):
     print(page, train_yn)
 
-    print(train_yn == "Y")
-    # train_yn이 Y인 경우를 불러올 경우
-    if train_yn == "Y":
+    dataset = get_id_from_keyword(keyword).filter(Img_set.train_yn == train_yn)
         
-        dataset = Img_set.query.filter(Img_set.train_yn == train_yn)
+    dataset = dataset.paginate(page=page, per_page=15)
 
-        # if using_kw:
-        #     search = "%%{}%%".format(using_kw)
-        #     using_dataset = using_dataset.filter(Medicine.name.ilike(search))
-            
-        dataset = dataset.paginate(page=page, per_page=50)
-
-    # train_yn이 N인 경우를 불러올 경우
-    # 태그 데이터가 존재하지 않거나 
-    elif train_yn == "N":
-
-        subquery = Img_set.query.filter(Img_set.train_yn == "N").subquery()
-        
-        dataset = db.session.query(
-            subquery.c.img_id,
-            subquery.c.date,
-            subquery.c.rate,
-            subquery.c.train_cnt,
-            subquery.c.train_yn
-        ).join(
-            Tag_set, Tag_set.img_id == subquery.c.img_id
-        ).group_by(subquery.c.img_id)
-
-        dataset = dataset.paginate(page=page, per_page=10)
-
-    else:
-        return make_response(jsonify({"resp": 'not allowed'}), 304)
-    
     resp = {
         "resp" : 200,
         "data" : []
@@ -150,7 +195,7 @@ def yn_change():
     
     if data['now'] == "Y":
         to_change = "N"
-
+        
     elif data['now'] == "N":
         to_change = "Y"
 
@@ -159,6 +204,13 @@ def yn_change():
     
     for img in Img_set.query.filter(Img_set.img_id.in_(data['data'])).all():
         img.train_yn = to_change
+
+        if to_change == "N":
+            del_tag(img.img_id)
+
+        if to_change == "Y":
+            tag_to_txt(img.img_id)
+
 
     db.session.commit()
 
@@ -173,23 +225,8 @@ def data_tag():
     using_dataset = Img_set.query.filter(Img_set.train_yn == "Y")
 
     if kw:
-        search = "%%{}%%".format(kw)
+        using_dataset = get_id_from_keyword(kw)
 
-        id_list = []
-        for item in Medicine.query.filter(Medicine.name.ilike(search)).all():
-            id_list.append(item.class_id)
-
-        subquery = Tag_set.query.filter(Tag_set.class_id.in_(id_list)).subquery()
-        using_dataset = db.session.query(
-            Img_set.img_id,
-            Img_set.user_id,
-            Img_set.img_dir,
-            Img_set.train_cnt,
-            Img_set.date,
-            Img_set.rate
-        ).select_from(Img_set).join(
-            subquery, Img_set.img_id == subquery.c.img_id
-        ).group_by(subquery.c.img_id)
     using_dataset = using_dataset.paginate(page=page, per_page=10)
 
     medicine_list = db.session.query(
@@ -332,9 +369,13 @@ def analysis_log():
     
     if kw:
         search = "%%{}%%".format(kw)
-        # log_list = log_list.filter(Check_log.check_log_id.ilike(search))
-        # query = query.filter(Check_log.check_log_id.ilike(search))
-        log_list = log_list.filter(Check_log.check_log_id.ilike(search)).distinct()
+
+        # 키워드를 기반으로 class_id를 추출함
+        id_list = []
+        for item in Medicine.query.filter(Medicine.name.ilike(search)).all():
+            id_list.append(item.class_id)
+        
+        log_list = log_list.filter(Check_log.class_id.in_(id_list))
         
     log_list = log_list.paginate(page=page, per_page=10)
     # log_list = query.paginate(page=page, per_page=10)
@@ -342,7 +383,8 @@ def analysis_log():
     medicine_list = db.session.query(
         Medicine.class_id,
         Medicine.name
-    ).filter(Medicine.class_id != "").all()
+    )
+    medicine_list_using = medicine_list.filter(Medicine.class_id != "").all()
     
     # UTC 시각을 한국 시각으로 변환
     # for log in log_list.items:
@@ -350,7 +392,7 @@ def analysis_log():
 
     return render_template("model/analysis_log.html",
                            current_menu="analysis_log",
-                           medicine_list = medicine_list,
+                           medicine_list_using = medicine_list_using,
                            log_list=log_list,
                            page=page,
                            kw=kw) 
@@ -386,8 +428,6 @@ def log_to_tag():
     for item in tag_id_list:
         
         Tag_set.add_tag(**item)
-
-    tag_to_txt(data['id'])
 
     return make_response("success", 200)
 

@@ -5,13 +5,17 @@
 {% block content %}
 
 <h2 class="border-bottom py-3 m-3">분석 로그</h2>
-
+<datalist id="medicine_list_all">
+    {% for medicine in medicine_list_using %}
+        <option class-id="{{medicine.class_id}}" value="{{medicine.name}}"></option>
+    {% endfor %}
+</datalist>
 <div class="py-3 m-3">
     <div class="row p-3">
         <div class="col-5 p-3">
             <!-- 검색 -->
             <div class="input-group mb-3">
-                <input type="text" id="search_kw" class="form-control me-1" value="{{ kw or '' }}">
+                <input type="text" list="medicine_list_all" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
                 <div class="input-group-append">
                     <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>
                 </div>
@@ -32,7 +36,7 @@
                 <tbody>
                     {% if log_list.total > 0 %}
                     {% for log in log_list.items %}
-                    <tr class="text-center" data-checkLogId="{{ log.img_id }}">
+                    <tr class="text-center" data-imgid="{{ log.img_id }}">
                         <td>{{ loop.index0 + 1 + (log_list.page - 1) * log_list.per_page }}</td>
                         <td class="text-center">{{ log.img_id }}</td>
                         <td>{{ log.date|customDate }}</td>
@@ -49,15 +53,8 @@
             </table>
 
             <div class="mb-3">
-                
-                <button type="submit" onclick="modDataSubmit()" class="btn btn-primary mb-3" style="float: right;">
+                <button id="save" type="button" class="btn btn-primary mb-3" style="float: right;">
                     학습 데이터로 저장
-                </button>
-                <button id="modify" onclick="modifyToggle(this);" type="button" class="btn btn-outline-success" style="float: right;">
-                    수정
-                </button>
-                <button id="addTag" onclick="add_tag();" type="button" class="btn btn-primary mb-3" style="float: right;">
-                    태그 추가
                 </button>
             </div>
         </div>
@@ -66,11 +63,7 @@
         <div class="col-6 card border p-3 ms-4">
             <div class="mb-3">
                 <p class="fw-bold">
-                    <select class="form-control" id="ClassNameList" onchange="selectChange()">
-                        {% for medicine in medicine_list %}
-                            <option value="{{medicine.class_id}}">{{medicine.name}}</option>
-                        {% endfor %}
-                    </select>
+                    <input type="text" list="medicine_list_all" id="ClassNameList" class="form-control me-1" value="">
                 </p>
                 <img style="display:block; max-width: 100%;" src="/static/image/medicine_thum/tagging.png" class="form-control" id="img" ></img>
             </div>
@@ -168,251 +161,10 @@
             document.getElementById('searchForm').submit();
         }
     });
+</script>
 
-    /* 약품 상세 정보(AJAX) */
-    var tag_list;
-    var btn_index = 0;
-    var img_size;
-    var modifyMode = false;
-
-    const rows = document.querySelectorAll('tr[data-checkLogId]');
-    const nameArea = document.getElementById('ClassNameList');
-    const imgArea = document.getElementById('img');
-    const usageTextarea = document.getElementById('usage');
-    const cautionTextarea = document.getElementById('caution');
-    const buttonBox = document.getElementById('btn_layer');
-    const cropper = new Cropper(imgArea, 
-    {
-        viewMode: 1, // 크롭 박스가 이미지를 완전히 포함하도록 설정
-        zoomable:false,
-        rotatable:false,
-        movable:false,
-        toggleDragModeOnDblClick:false,
-        crop(event) {
-                
-                if(modifyMode){
-                    const cropBox = cropper.getCropBoxData();
-
-                    tag_list.data[btn_index].width = cropBox.width / img_size.width;
-                    tag_list.data[btn_index].height = cropBox.height / img_size.height;
-
-                    tag_list.data[btn_index].left = cropBox.left / img_size.width + tag_list.data[btn_index].width / 2;
-                    tag_list.data[btn_index].top = cropBox.top / img_size.height + tag_list.data[btn_index].height / 2;
-                }
-                else{
-                    // alert("수정 모드가 활성화되어있지 않습니다.");
-                }
-        },
-        ready() {
-            // 로드되고 난 후의 작업
-            // 첫 번째 태그를 불러옴
-            img_size = this.cropper.getContainerData();
-
-            tag = tag_list.data[0];
-
-            const width = tag.width * img_size.width;
-            const height = tag.height * img_size.height;
-
-            const left = tag.left * img_size.width - width/2;
-            const top = tag.top * img_size.height - height/2;
-
-            cropper.setCropBoxData({
-                'left' : left,
-                'top' : top,
-                'width' : width,
-                'height' : height,
-            });
-
-            document.getElementById('ClassNameList').value = tag.class_id;
-        },
-    });
-
-    function adjustTextareaHeight(textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = (textarea.scrollHeight) + 'px';
-
-    }
-
-    // select값 수정 이벤트
-    function selectChange() {
-        
-        if(modifyMode){
-            tag_list.data[btn_index].class_id = document.getElementById('ClassNameList').value;
-        }
-        
-    }
-
-    // 수정모드 설정
-    function modifyToggle(element){
-
-        if (modifyMode){
-            element.classList.remove('btn-success');
-            element.classList.add('btn-outline-success');
-            modifyMode = false;
-        }
-        else{
-            element.classList.remove('btn-outline-success');
-            element.classList.add('btn-success');
-            modifyMode = true;
-        }
-
-        console.log(modifyMode);
-
-    }
-
-    function tagClick(label, index) {
-        
-        return function() {
-            btn_index = index;
-            const tag = tag_list.data[index];
-
-            // 태그 정보 cropper에 적용
-            const width = tag.width * img_size.width;
-            const height = tag.height * img_size.height;
-
-            const left = tag.left * img_size.width - width/2;
-            const top = tag.top * img_size.height - height/2;
-
-            cropper.setCropBoxData({
-                'left' : left,
-                'top' : top,
-                'width' : width,
-                'height' : height,
-            });
-
-            // 약품 이름 설정
-            nameArea.value = tag.class_id;
-
-            // active 클래스 제거
-            activeClear();
-
-            // 현재 클릭한 label에 active 클래스 추가
-            label.classList.add('active');
-        };
-    }
-
-    function activeClear(){
-        const activeLabels = document.querySelectorAll('.btn-group-toggle .active');
-
-        activeLabels.forEach(activeLabel => {
-        activeLabel.classList.remove('active');
-        });
-    }
-
-    // 태그추가 버튼
-    function add_tag(){
-
-        const nowData = cropper.getCropBoxData();
-        
-        // 태그데이터 초기화
-        const tag = {
-            'check_log_id':"",
-            'name':document.getElementById("ClassNameList").options[document.getElementById("ClassNameList").selectedIndex].text,
-            'class_id': document.getElementById("ClassNameList").value,
-            'left': 0,
-            'top': 0,
-            'width': 0,
-            'height': 0,
-        };
-        console.log(tag);
-        const label = document.createElement('label');
-
-        activeClear();
-        label.classList.add('btn', 'btn-outline-secondary', 'active');
-        
-        label.id = tag.check_log_id;
-
-        // 전체 버튼의 개수
-        const index = buttonBox.querySelectorAll('*').length;
-        label.textContent = 'TAG ' + index;
-
-        nameArea.value = tag.class_id;
-        
-        label.addEventListener('click', tagClick(label, index));
-        
-        
-        buttonBox.appendChild(label);
-        tag_list.data.push(tag);
-
-        //추가 후 버튼 클릭 구현
-        tagClick(label, index)();
-
-    }
-    rows.forEach(function (row) {
-        row.addEventListener('click', function () {
-            const imgId = this.getAttribute('data-checkLogId');
-
-            fetch(`/model/log_detail/${imgId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if ('error' in data) {
-                        console.error(data.error);
-                    } else {
-
-
-                        // 수정모드가 켜져있을 경우 해제
-                        if (modifyMode){
-                            modifyToggle(document.getElementById('modify'));
-                        }
-                        
-                        cropper.replace(data.path);
-                        
-                        // 기존 버튼 제거
-                        buttonBox.innerHTML='';
-
-                        tag_list = data;
-
-                        let i = 0;
-                        for (const tag of tag_list.data){
-                            const label = document.createElement('label');
-
-                            label.classList.add('btn', 'btn-outline-secondary');
-                            
-                            label.id = tag.check_log_id;
-                            
-                            label.textContent = 'TAG ' + i;
-                            
-                            label.addEventListener('click', tagClick(label, i));
-                            // 버튼을 추가할 div에 버튼을 추가
-                            buttonBox.appendChild(label);
-                            if(i == 0){
-                                label.classList.add('active');
-                            }
-                            i++;
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('약품 정보를 가져오는 중 오류 발생:', error)
-                });
-        });
-    });
-
-    function modDataSubmit(){
-
-        // 수정모드가 켜져있을 경우 해제
-        if (modifyMode){
-            modifyToggle(document.getElementById('modify'));
-        }
-        fetch(`/model/log_to_tag/`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(
-                tag_list
-            ),
-        }).then((data) => {
-            // 성공적으로 JSON 데이터를 받았을 때
-            console.log(data); // 받은 데이터를 로그에 출력
-            alert('성공적으로 저장되었습니다.');
-        })
-        .catch((error) => {
-            // 오류가 발생했을 때
-            console.error('오류 발생:', error);
-            alert('저장에 실패했습니다. 다시 시도해주세요.');
-        });
-    }
-
+<script type="module">
+    import TagEditor from "{{ url_for('static', filename='cropper-tag.js') }}";
+    const editor = new TagEditor('/model/log_detail/', '/model/log_to_tag/');
 </script>
 {% endblock %}

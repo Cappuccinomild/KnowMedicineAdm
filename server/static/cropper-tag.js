@@ -6,11 +6,14 @@ class TagEditor {
         this.imgSize;
         
         this.buttonBox = document.getElementById('btn_layer');
+
+        // 약품명을 출력하는 라벨에 기본 읽기모드 설정
         this.nameArea = document.getElementById('ClassNameList');
+        this.nameArea.setAttribute("readonly", true);
+
         this.imgArea = document.getElementById('img');
         
         this.modifyMode = false;
-        console.log(this.modifyMode);
         this.btnIndex = 0;
 
         this.cropper = new Cropper(this.imgArea, {
@@ -28,31 +31,44 @@ class TagEditor {
                     this.tagList.data[this.btnIndex].left = cropBox.left / this.imgSize.width + this.tagList.data[this.btnIndex].width / 2;
                     this.tagList.data[this.btnIndex].top = cropBox.top / this.imgSize.height + this.tagList.data[this.btnIndex].height / 2;
                 }
-                console.log(this.modifyMode);
             }.bind(this),
             ready: this.cropperReady.bind(this),
         });
 
-
+        
         const rows = document.querySelectorAll('tr[data-imgId]');
         rows.forEach(row => {
             row.addEventListener('click', this.handleRowClick.bind(this));
         });
 
         const modifyButton = document.getElementById('modify');
+        if (modifyButton){
         modifyButton.addEventListener('click', this.modifyToggle.bind(this));
+        }
 
         const addButton = document.getElementById('addTag');
-        addButton.addEventListener('click', this.addTag.bind(this));
-
+        if (addButton){
+            addButton.addEventListener('click', this.addTag.bind(this));
+        }
+        
         const saveButton = document.getElementById('save');
-        saveButton.addEventListener('click', this.saveChanges.bind(this));
+        if (saveButton){
+            saveButton.addEventListener('click', this.saveChanges.bind(this));
+        }
 
         const nameInput = document.getElementById('ClassNameList');
-        nameInput.addEventListener('input', this.handleNameInputChange.bind(this));
+        if (nameInput){
+            nameInput.addEventListener('input', this.handleNameInputChange.bind(this));
+        }
 
         const delButton = document.getElementById('delete');
-        delButton.addEventListener('click', this.delTag.bind(this));
+        if (modifyButton){
+            delButton.addEventListener('click', this.delTag.bind(this));
+        }
+    }
+
+    getFechLink(){
+        return this.fetchLink;
     }
 
     handleRowClick(event) {
@@ -109,12 +125,15 @@ class TagEditor {
 
     modifyToggle() {
         const modifyButton = document.getElementById('modify');
+        
         if (this.modifyMode) {
             modifyButton.classList.remove('btn-success');
             modifyButton.classList.add('btn-outline-success');
+            this.nameArea.setAttribute("readonly", false);
         } else {
             modifyButton.classList.remove('btn-outline-success');
             modifyButton.classList.add('btn-success');
+            this.nameArea.setAttribute("readonly", true);
         }
         this.modifyMode = !this.modifyMode;
     }
