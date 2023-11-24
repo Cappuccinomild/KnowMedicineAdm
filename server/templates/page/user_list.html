@@ -59,112 +59,104 @@
                 </tbody>
             </table>
         </div>
-        
 
         <!-- 유저 상세 정보 -->
-        <div class="col-6 card border p-3 ms-4">
-            <div class="">
-                <p class="fw-bold">상세정보</p>
-            </div>
+        <div class="col-6 p-3 ms-4 card d-flex justify-content-center">
 
-            <div class="row mb-3">
-                <label for="user_id" class="col-auto col-form-label">아이디</label>
-                <div class="col-6">
-                    <input type="text" class="form-control" name="user_id" id="user_id" value="" readonly>
+            <div class="text-center">
+                <div id="loadingSection" class="spinner-border text-secondary visually-hidden">
                 </div>
             </div>
 
-            <div class="row mb-3">
-                <label for="name" class="col-auto col-form-label">이름</label>
-                <div class="col-6">
-                    <input type="text" class="form-control" name="name" id="name" value="" readonly>
-                </div>
-            </div>
+            <div id="detailSection">
 
-            <div class="row mb-3">
-                <label for="birthday" class="col-auto col-form-label">생년월일</label>
-                <div class="col-6">
-                    <input type="date" class="form-control" name="birthday" id="birthday" value="" readonly>
+                <div class="">
+                    <p class="fw-bold">상세정보</p>
                 </div>
-            </div>
 
-            <div class="row mb-3">
-                <label class="col-auto col-form-label">성별</label>
-                <div class="col-auto">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="gender" id="male" value="남성" checked
-                            disabled>
-                        <label class="form-check-label" for="male">남성</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="gender" id="female" value="여성" disabled>
-                        <label class="form-check-label" for="female">여성</label>
+                <div class="row mb-3">
+                    <label for="user_id" class="col-auto col-form-label">아이디</label>
+                    <div class="col-6">
+                        <input type="text" class="form-control" name="user_id" id="user_id" value="" readonly>
                     </div>
                 </div>
-            </div>
 
-            <div class="row mb-3">
-                <label for="phone" class="col-auto col-form-label">전화번호</label>
-                <div class="col-6">
-                    <input type="text" class="form-control" name="phone" id="phone" value="" readonly>
+                <div class="row mb-3">
+                    <label for="name" class="col-auto col-form-label">이름</label>
+                    <div class="col-6">
+                        <input type="text" class="form-control" name="name" id="name" value="" readonly>
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-8 text-center my-3">
-                <a href="javascript:void(0)" class="btn btn-outline-dark btn- disabled" id="editBtn" data-userId="">
-                    <i class="bi bi-pencil-fill me-1"></i>수정
-                </a>
-                <a href="javascript:void(0)" class="btn btn-outline-danger btn- disabled" id="deleteBtn" data-userId="">
-                    <i class="bi bi-x-lg me-1"></i>삭제
-                </a>
-            </div>
-
-            <hr>
-
-            <div class="mt-3">
-                <p class="fw-bold">최근이력</p>
-            </div>
-
-            <!--
-            <div class="row mb-3">
-                <label for="rate" class="col-auto col-form-label">정확도</label>
-                <div class="col-6">
-                    <input type="text" class="form-control" name="rate" id="rate" value="" readonly>
+                <div class="row mb-3">
+                    <label for="birthday" class="col-auto col-form-label">생년월일</label>
+                    <div class="col-6">
+                        <input type="date" class="form-control" name="birthday" id="birthday" value="" readonly>
+                    </div>
                 </div>
-                
-            </div>
 
-            <div class="row mb-3">
-                <label for="date" class="col-auto col-form-label">분석날짜</label>
-                <div class="col-6">
-                    <input type="text" class="form-control" name="date" id="date" value="" readonly>
+                <div class="row mb-3">
+                    <label class="col-auto col-form-label">성별</label>
+                    <div class="col-auto">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="male" value="남성" checked
+                                disabled>
+                            <label class="form-check-label" for="male">남성</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="gender" id="female" value="여성" disabled>
+                            <label class="form-check-label" for="female">여성</label>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            -->
 
-            <div class="overflow-auto" style="max-height: 25%;">
-                <table class="table table-bordered">
-                    <thead class="sticky-top">
-                        <tr class="text-center table-primary">
-                            <th>번호</th>
-                            <th>분석날짜</th>
-                            <th>추측 약품</th>
-                            <th>정확도</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recentLogsTableBody" class="text-center">
+                <div class="row mb-3">
+                    <label for="phone" class="col-auto col-form-label">전화번호</label>
+                    <div class="col-6">
+                        <input type="text" class="form-control" name="phone" id="phone" value="" readonly>
+                    </div>
+                </div>
 
-                    </tbody>
-                </table>
-            </div>
+                <div class="col-8 text-center my-3">
+                    <a href="javascript:void(0)" class="btn btn-outline-dark disabled" id="editBtn" data-userId="">
+                        <i class="bi bi-pencil-fill me-1"></i>수정
+                    </a>
+                    <a href="javascript:void(0)" class="btn btn-outline-danger disabled" id="deleteBtn" data-userId="">
+                        <i class="bi bi-x-lg me-1"></i>삭제
+                    </a>
+                </div>
 
-            <div class="mt-3">
-                <p class="fw-bold">약품별 분석횟수</p>
-                <canvas id="medicine_count"></canvas>
+                <hr>
+
+                <div class="mt-3">
+                    <p class="fw-bold">최근이력</p>
+                </div>
+
+                <div class="overflow-auto" style="max-height: 25%;">
+                    <table class="table table-bordered">
+                        <thead class="sticky-top">
+                            <tr class="text-center table-primary">
+                                <th>번호</th>
+                                <th>분석날짜</th>
+                                <th>추측 약품</th>
+                                <th>정확도</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentLogsTableBody" class="text-center">
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3">
+                    <p class="fw-bold">약품별 분석횟수</p>
+                    <canvas id="medicine_count"></canvas>
+                </div>
+
             </div>
 
         </div>
-    
+
     </div>
 
     <!-- 페이징 -->
@@ -327,9 +319,21 @@
     const medicine_count = document.getElementById('medicine_count');
 
     let selectedRow = null;
+    var isRunning = false;
+    const loadingSection = document.getElementById('loadingSection');
+    const detailSection = document.getElementById('detailSection');
 
     rows.forEach(function (row) {
         row.addEventListener('click', function () {
+
+            if (isRunning) {
+                return;
+            }
+
+            isRunning = true;
+            loadingSection.classList.remove('visually-hidden')
+            detailSection.classList.add('visually-hidden')
+
             const userId = this.getAttribute('data-userId');
             idInput.value = userId;
 
@@ -420,7 +424,7 @@
 
                                         datalabels: {
                                             color: 'black',
-                                            display: function(context) {
+                                            display: function (context) {
                                                 return context.dataset.data;
                                             },
                                             font: {
@@ -450,6 +454,8 @@
                                 }
                             });
 
+
+
                         } else {
 
                             if (window.myChart) {
@@ -457,6 +463,9 @@
                             }
                         }
                     }
+                    isRunning = false;
+                    loadingSection.classList.add('visually-hidden')
+                    detailSection.classList.remove('visually-hidden')
                 })
                 .catch(error => {
                     console.log('유저 정보를 가져오는 중 오류 발생: ', error)

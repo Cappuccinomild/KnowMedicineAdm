@@ -1,5 +1,7 @@
+from io import BytesIO, StringIO
 import json
-from flask import Blueprint, url_for, render_template, flash, request, session, g, jsonify
+from urllib.parse import quote
+from flask import Blueprint, url_for, render_template, flash, request, session, g, jsonify, Response, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 
@@ -10,6 +12,7 @@ from server.views.auth_views import login_required
 from sqlalchemy import desc, func, cast, Integer
 
 from datetime import datetime, timedelta, timezone
+import pandas as pd
 
 bp = Blueprint("page", __name__, url_prefix="/page")
 
@@ -126,6 +129,52 @@ def medicine_detail(medId):
     return jsonify({'error': '약품 정보를 찾을 수 없습니다.'}), 404
 
 
+@bp.route("/medicine_download_csv/<string:tbType>")
+def medicine_download_csv(tbType):
+    # output_stream = StringIO() 
+    output_stream = BytesIO() # dataframe을 저장할 IO stream
+    
+    if tbType == 'tagged':
+        medicine_list = Medicine.query.filter(Medicine.class_id != None).order_by(Medicine.name).all()
+    
+    elif tbType == 'nonTagged':
+        medicine_list = Medicine.query.filter(Medicine.class_id == None).order_by(Medicine.name).all()
+
+    # DataFrame 생성
+    df = pd.DataFrame({
+        '의약품 이름': [medicine.name for medicine in medicine_list],
+        '유형': ['키트' if medicine.effect_type == 'K' else '약품' for medicine in medicine_list],
+        '효능': [medicine.effect for medicine in medicine_list],
+        '용법': [medicine.usage for medicine in medicine_list],
+        '주의사항': [medicine.caution for medicine in medicine_list],
+    })
+    
+    df.to_excel(output_stream, index=False)
+    output_stream.seek(0)
+    
+    return send_file(
+        output_stream,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=f"의약품정보_{tbType}.xlsx"
+    )
+    
+    # df.to_csv(output_stream, encoding='utf-8-sig', index=False) # 그 결과를 앞서 만든 IO stream에 저장
+
+    # response = Response(
+    #     output_stream.getvalue(),
+    #     mimetype='text/x-csv',
+    #     content_type='application/octet-stream'
+    # )
+    
+    # filename = quote("의약품정보.csv")
+    # response.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{filename}"
+    
+    # return response
+    
+    # return redirect(url_for("page.medicine_list"))
+
+
 @bp.route("/user_list/")
 @login_required
 def user_list():
@@ -179,6 +228,7 @@ def user_modify(user_id):
         form = UserDetailForm(obj=user)
         
     return render_template('page/user_modify.html', current_menu="user_list", form=form)
+
 
 @bp.route('/user_detail/<string:userId>')
 def user_detail(userId):
@@ -260,7 +310,6 @@ def user_detail(userId):
         return jsonify(user_data)
         
     return jsonify({'error': '유저 정보를 찾을 수 없습니다.'}), 404
-
 
 
 @bp.route('/user_delete/<string:user_id>')
