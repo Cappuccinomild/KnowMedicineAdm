@@ -23,7 +23,7 @@
             </div>
 
             <div class="mb-5" style="max-height: 400px; overflow-y: auto;">
-                <table class="table table-hover table-bordered">
+                <table class="table table-hover table-bordered taggedTable">
                     <thead class="sticky-top">
                         <tr class="text-center table-primary">
                             <th>번호</th>
@@ -65,7 +65,7 @@
                 </a>
             </div>
 
-            <table class="table table-hover table-bordered">
+            <table class="table table-hover table-bordered nonTaggedTable">
                 <thead>
                     <tr class="text-center table-primary">
                         <th>번호</th>
@@ -122,6 +122,12 @@
                     <div class="mb-3">
                         <label for="caution">주의사항</label>
                         <textarea class="form-control" id="caution" rows="6" style="resize:none;" readonly></textarea>
+                    </div>
+
+                    <div class="text-end">
+                        <a href="javascript:void(0)" class="btn btn-primary d-none" id="addTagBtn">
+                            태그 추가
+                        </a>
                     </div>
                 </div>
             </div>
@@ -218,6 +224,9 @@
     const usageTextarea = document.getElementById('usage');
     const cautionTextarea = document.getElementById('caution');
 
+    var medId;
+    const addTagBtn = document.getElementById("addTagBtn");
+
     let selectedRow = null
 
     function adjustTextareaHeight(textarea) {
@@ -228,7 +237,11 @@
 
     rows.forEach(function (row) {
         row.addEventListener('click', function () {
-            const medId = this.getAttribute('data-medId');
+            // const medId = this.getAttribute('data-medId');
+            medId = this.getAttribute('data-medId');
+            console.log(medId)
+            
+            const tableType = row.closest('table').classList.contains('taggedTable') ? 'tagged' : 'nonTagged';
 
             if (selectedRow) {
                 selectedRow.classList.remove('table-active');
@@ -253,6 +266,13 @@
                         adjustTextareaHeight(usageTextarea);
                         adjustTextareaHeight(cautionTextarea);
                         */
+                        
+
+                        if (tableType == 'nonTagged') {
+                            addTagBtn.classList.remove('d-none');
+                        } else {
+                            addTagBtn.classList.add('d-none');
+                        }
                     }
                 })
                 .catch(error => {
@@ -261,7 +281,14 @@
         });
     });
 
+    /* 태그 추가 */
+    addTagBtn.addEventListener('click', function() {
+        
+        if(medId && confirm("태그를 추가하시겠습니까?")) {
+            window.location.href = `/page/medicine_add_tag/${medId}`
+        }
 
+    })
 
 </script>
 {% endblock %}

@@ -173,6 +173,25 @@ def medicine_download_csv(tbType):
     # return response
     
     # return redirect(url_for("page.medicine_list"))
+    
+
+@bp.route("/medicine_add_tag/<string:medId>")
+@login_required
+def medicine_add_tag(medId):    
+    curMedicine = Medicine.query.filter(Medicine.med_id == medId).first()
+    
+    if curMedicine:
+        if not curMedicine.class_id:
+            tagCount = Medicine.query.filter(Medicine.class_id != None).count()
+            newClassId = str(tagCount + 1)
+            curMedicine.class_id = newClassId
+            db.session.commit()
+        else:
+            print(">>> 이미 class_id 가 부여되어 있습니다.")
+    else:
+        print(">>> 해당 레코드를 찾을 수 없습니다.")
+
+    return redirect(url_for("page.medicine_list"))
 
 
 @bp.route("/user_list/")
