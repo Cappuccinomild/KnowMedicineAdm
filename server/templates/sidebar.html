@@ -1,23 +1,37 @@
 <!-- Sidebar  -->
-<div class="d-flex flex-column p-3 text-white bg-dark" style="min-height: 100vh; height:auto; width:300px; ">
+<div class="d-flex flex-column p-3 text-white bg-dark min-vh-100" style="width:300px;">
+    
     <!-- 아이콘과 로고 -->
-    <a href="#" class="p-3 d-flex align-items-center mb-10 mb-md-0 me-md-auto text-white text-decoration-none">
-        <span class="fs-4">
+    <div class="p-3 d-flex align-items-center mb-10 mb-md-0 me-md-auto text-white text-decoration-none">
+        <span class="fs-4 fw-bold">
             <i class="bi bi-capsule me-2"></i>KnowMedicine
         </span>
-    </a>
-    <div class="mb-3 p-3">
+    </div>
+
+    <hr>
+
+    <!-- 관리자 아이디 -->
+    <div class="p-3">
         {% if g.user %}
-        관리자 : {{ g.user.user_id }}
-        <a href="javascript:void(0)" data-uri="{{ url_for('auth.logout') }}" class="logout ms-3">
-            로그아웃
-        </a>
+        <div class="row d-flex align-items-center">
+            <div class="col-auto">
+                <span class="fs-5">{{ g.user.user_id }}</span>
+            </div>
+    
+            <div class="col text-end">
+                <a href="javascript:void(0)" data-uri="{{ url_for('auth.logout') }}" class="logout btn btn-secondary btn-sm">
+                    로그아웃
+                </a>
+            </div>
+        </div>
         {% endif %}
     </div>
+
+    <hr>
+
     <ul class="nav nav-pills flex-column mb-auto">
         <!-- 메뉴 항목 -->
         <li class="nav-item">
-
             <a href="{{ url_for('page.dashboard') }}" class="nav-link {% if current_menu == 'dashboard' %} active {% else %} text-white {% endif %}" aria-current="page">
                 <i class="bi bi-speedometer2 me-2"></i>대시보드
             </a>
@@ -54,9 +68,9 @@
 
     /* 로그아웃 확인 */
     const logout_elements = document.getElementsByClassName("logout");
-    Array.from(logout_elements).forEach(function(element) {
-        element.addEventListener('click', function() {
-            if(confirm("로그아웃 하시겠습니까?")) {
+    Array.from(logout_elements).forEach(function (element) {
+        element.addEventListener('click', function () {
+            if (confirm("로그아웃 하시겠습니까?")) {
                 location.href = this.dataset.uri;
             }
         });

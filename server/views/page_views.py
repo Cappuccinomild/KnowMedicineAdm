@@ -20,8 +20,13 @@ bp = Blueprint("page", __name__, url_prefix="/page")
 @bp.route("/dashboard/")
 @login_required
 def dashboard():
-    taggedCnt = Medicine.query.filter(Medicine.class_id != None).count()
-    nonTaggedCnt = Medicine.query.filter(Medicine.class_id == None).count()
+    # taggedCnt = Medicine.query.filter(Medicine.class_id != None).count()
+    # nonTaggedCnt = Medicine.query.filter(Medicine.class_id == None).count()
+        
+    taggedCnt = db.session.query(func.count(func.distinct(Tag_set.img_id))) \
+            .filter(Tag_set.img_id.in_(db.session.query(func.distinct(Check_log.img_id)))) \
+            .scalar()
+    nonTaggedCnt = db.session.query(func.count(func.distinct(Check_log.img_id))).scalar() - taggedCnt
     dailyUsage = get_daily_usage()
     monthlyUsage = get_monthly_usage()
     medImgs = get_med_imgs()

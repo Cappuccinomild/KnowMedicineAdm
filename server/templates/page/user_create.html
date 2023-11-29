@@ -3,7 +3,7 @@
 
 <h2 class="border-bottom py-3 m-3">유저 등록</h2>
 
-<div class="container">
+<div class="container col-xl-4">
     <form method="post" class="my-5">
         {{ form.csrf_token }}
         {% include "form_errors.html" %}
@@ -43,26 +43,19 @@
             </div>
         </div>
 
-
-            <!--
-            <label for="gender">성별</label>
-            <input type="text" class="form-control" name="gender" id="gender" value="{{ form.gender.data or '' }}">
-            -->
-
         <div class="row mb-3">
             <label class="col-auto col-form-label">성별</label>
-            <div class="col-auto">
+            <div class="col-auto d-flex align-items-center">
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="gender" id="male" value="남성" {% if form.gender.data != '여성' %} checked {% endif %}>
+                    <input class="form-check-input" type="radio" name="gender" id="male" value="남성" {% if form.gender.data !='여성' %} checked {% endif %}>
                     <label class="form-check-label" for="male">남성</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="gender" id="female" value="여성" {% if form.gender.data == '여성' %} checked {% endif %}>
+                    <input class="form-check-input" type="radio" name="gender" id="female" value="여성" {% if form.gender.data=='여성' %} checked {% endif %}>
                     <label class="form-check-label" for="female">여성</label>
                 </div>
             </div>
         </div>
-
 
         <div class="row mb-3">
             <label for="phone" class="col-auto col-form-label">전화번호</label>
@@ -88,7 +81,7 @@
 
     labels.forEach(label => {
         const labelWidth = label.offsetWidth;
-        if(labelWidth > maxLabelWidth) {
+        if (labelWidth > maxLabelWidth) {
             maxLabelWidth = labelWidth;
         }
     });

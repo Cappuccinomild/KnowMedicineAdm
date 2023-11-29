@@ -97,10 +97,9 @@
 
                 <div class="row mb-3">
                     <label class="col-auto col-form-label">성별</label>
-                    <div class="col-auto">
+                    <div class="col-auto d-flex align-items-center">
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="gender" id="male" value="남성" checked
-                                disabled>
+                            <input class="form-check-input" type="radio" name="gender" id="male" value="남성" checked disabled>
                             <label class="form-check-label" for="male">남성</label>
                         </div>
                         <div class="form-check form-check-inline">
@@ -134,7 +133,7 @@
 
                 <div class="overflow-auto" style="max-height: 25%;">
                     <table class="table table-bordered">
-                        <thead class="sticky-top">
+                        <thead id="recentLogsTableHeader" class="sticky-top">
                             <tr class="text-center table-primary">
                                 <th>번호</th>
                                 <th>분석날짜</th>
@@ -331,8 +330,8 @@
             }
 
             isRunning = true;
-            loadingSection.classList.remove('visually-hidden')
-            detailSection.classList.add('visually-hidden')
+            loadingSection.classList.remove('visually-hidden');
+            detailSection.classList.add('visually-hidden');
 
             const userId = this.getAttribute('data-userId');
             idInput.value = userId;
@@ -347,8 +346,6 @@
             nameInput.value = '';
             birthdayInput.value = '';
             phoneInput.value = '';
-            // rate.value = '';
-            // date.value = '';
 
             // 초기화
             recentLogsTableBody.innerHTML = '';
@@ -362,8 +359,6 @@
                         nameInput.value = data.name;
                         birthdayInput.value = formatDate(data.birthday);
                         phoneInput.value = data.phone;
-                        // rate.value = data.rate;
-                        // date.value = formatDate(data.date);
 
                         const genderValue = data.gender;
                         if (genderValue === "남성") {
@@ -390,7 +385,6 @@
 
                                 cell1.textContent = index + 1;
                                 cell2.textContent = formatDate2(log.date);
-                                // cell3.textContent = log.class_id;
                                 cell3.textContent = log.medicine_name;
                                 cell4.textContent = log.rate;
                             })
@@ -454,13 +448,19 @@
                                 }
                             });
 
-
-
                         } else {
 
                             if (window.myChart) {
                                 window.myChart.destroy();
                             }
+
+                            const row = recentLogsTableBody.insertRow();
+                            const numColumns = document.getElementById('recentLogsTableHeader').rows[0].cells.length;
+                            const cell1 = row.insertCell(0);
+
+                            cell1.colSpan = numColumns;
+                            cell1.textContent = '최근 이력이 없습니다.';
+
                         }
                     }
                     isRunning = false;
