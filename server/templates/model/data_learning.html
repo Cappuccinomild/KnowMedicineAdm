@@ -1,0 +1,245 @@
+
+
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="border-bottom py-3 m-3">모델 목록</h2>
+
+<div class="py-3 m-3">
+    <div class="row p-3">
+        <div class="col p-3">
+            <!-- 검색 -->
+            <div class="input-group mb-3">
+                
+                <input type="text" list="medicine_list_all" id="search_kw" class="form-control me-1" value="{{ kw or ''}}">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>
+                </div>
+            </div>
+
+            <!-- 약품 목록 -->
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <tr class="text-center table-primary">
+                        <th>번호</th>
+                        <th>ID</th>
+                        <th>사용</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% if model_list.total > 0 %}
+                    {% for dataset in model_list.items %}
+                    <tr class="text-center" data-modId="{{ dataset.model_id }}">
+                        <td>{{ loop.index0 + 1 + (model_list.page - 1) * model_list.per_page }}</td>
+                        <td class="text-center">{{ dataset.model_id }}</td>
+                        <td>{{dataset.using}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center">약품 정보가 없습니다.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            <!-- 약품 상세 정보 -->
+            
+            <div class="mb-3">
+<!--                 
+                <button id="save" type="button" class="btn btn-primary mb-3" style="float: right;">
+                    저장
+                </button>
+                <button id="delete" type="button" class="btn btn-outline-danger" style="float: right;">
+                    삭제
+                </button>
+                <button id="modify" type="button" class="btn btn-outline-success" style="float: right;">
+                    수정
+                </button> -->
+                <button id="addTag" onclick="learning()" type="button" class="btn btn-primary mb-3" style="float: right;">
+                    신규 학습
+                </button>
+            </div>
+        </div>
+        
+        
+        <div class="col container border p-3">
+            <div class="mb-3">
+                <canvas id="accurate"></canvas>
+            </div>
+
+            <div class="mb-3">
+                <div id="aniimated-thumbnials" class="baguetteBoxOne gallery"></div>
+                <p>
+                    <div id="btn_layer" class="btn-group btn-group-toggle" data-toggle="buttons">
+
+                    </div>
+                </p>
+                
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- 검색 폼 -->
+<form id="searchForm" method="get" action="{{ url_for('model.data_tag') }}">
+    <input type="hidden" id="kw" name="kw" value="{{ kw or '' }}">
+    <input type="hidden" id="page" name="page" value="{{ page }}">
+</form>
+
+{% endblock %}
+{% block script %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+<!-- Galllery -->
+<link rel="stylesheet" href="{{url_for('static', filename='gallery/baguetteBox.min.css')}}"></script>
+<script src="{{url_for('static', filename='gallery/baguetteBox.min.js')}}" async></script>
+
+<script type="text/javascript">
+
+    /* 페이징 */
+    const page_elements = document.getElementsByClassName("page-link");
+    Array.from(page_elements).forEach(function (element) {
+        element.addEventListener('click', function () {
+            document.getElementById('page').value = this.dataset.page;
+            document.getElementById('searchForm').submit();
+        });
+    });
+
+    /* 검색 */
+    const btn_search = document.getElementById("btn_search");
+    btn_search.addEventListener('click', function () {
+        console.log(document.getElementById('kw').value)
+        document.getElementById('kw').value = document.getElementById('search_kw').value;
+        console.log(document.getElementById('kw').value)
+        document.getElementById('page').value = 1; // 검색 시 1페이지부터 조회
+        document.getElementById('searchForm').submit();
+    })
+
+    const search_kw = document.getElementById("search_kw");
+    search_kw.addEventListener('keyup', function (event) {
+        if (event.key === "Enter") {
+            console.log(document.getElementById('kw').value)
+            document.getElementById('kw').value = search_kw.value;
+            console.log(document.getElementById('kw').value)
+            document.getElementById('page').value = 1; // 검색 시 1페이지부터 조회
+            document.getElementById('searchForm').submit();
+        }
+    });
+
+    // 차트
+    const accurate = document.getElementById('accurate');
+
+    /* 모델별 평균 정확도 */
+    new Chart(accurate, {
+        plugins: [ChartDataLabels],
+        type: 'bar',
+        data: {
+            labels: [
+                {% for dataset in model_list.items %}
+                    "{{ dataset.model_id }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                label: '평균 정확도(%)',
+                data: [
+                    {% for dataset in model_list.items %}
+                        {{ dataset.rate }},
+                    {% endfor %}
+                ],
+                datalabels: {
+                    anchor: 'end',
+                    align: 'start'
+                }
+            }]
+        },
+        options: {
+            plugins: {
+                tooltip: {
+                    enabled: false
+                },
+                datalabels: {
+                    color: 'black',
+                    font: {
+                        weight: 'bold',
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '모델별 평균 정확도',
+                    font: {
+                        size: 15
+                    },
+                },
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            maxBarThickness: 50,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+        },
+
+    });
+    
+    //이미지
+    const rows = document.querySelectorAll('tr[data-modId]');
+
+    const img_zone = document.getElementById('aniimated-thumbnials');
+    
+    rows.forEach(row => {
+        row.addEventListener('click', async function(){
+            const modId = event.currentTarget.getAttribute('data-modId');
+
+            fetch(`/model/model_detail/${modId}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                img_zone.innerHTML="";
+
+                for (let i = 0; i < data.data.length; i++) {
+                    img_zone.innerHTML += `<a href=${data.data[i]}><img width="20%" height="20%" src=${data.data[i]}></a>`
+                }
+            });
+
+            baguetteBox.run('.baguetteBoxOne');
+            
+        });
+    });
+
+    function learning(){
+        
+        fetch("/model/learning/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                now: "learning",
+                data: "data_list"
+            }),
+        }).then((data) => {
+            // 성공적으로 JSON 데이터를 받았을 때
+            console.log(data); // 받은 데이터를 로그에 출력
+            alert('모델 학습 완료.');
+            location.reload();
+        })
+        .catch((error) => {
+            // 오류가 발생했을 때
+            console.error('오류 발생:', error);
+            alert('저장에 실패했습니다. 다시 시도해주세요.');
+        });
+    }
+
+</script>
+
+
+{% endblock %}

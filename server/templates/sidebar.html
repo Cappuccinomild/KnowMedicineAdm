@@ -53,7 +53,12 @@
         </li>
         <li>
             <a href="{{ url_for('model.data_list') }}" class="nav-link {% if current_menu == 'data_list' %} active {% else %} text-white {% endif %}">
-                <i class="bi bi-gear-wide-connected me-2"></i>데이터 학습
+                <i class="bi bi-gear-wide-connected me-2"></i>데이터 관리
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('model.data_learning') }}" class="nav-link {% if current_menu == 'data_learning' %} active {% else %} text-white {% endif %}">
+                <i class="bi bi-gear-wide-connected me-2"></i>모델 목록
             </a>
         </li>
         <li>

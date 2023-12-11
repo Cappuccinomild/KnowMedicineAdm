@@ -129,11 +129,11 @@ class TagEditor {
         if (this.modifyMode) {
             modifyButton.classList.remove('btn-success');
             modifyButton.classList.add('btn-outline-success');
-            this.nameArea.setAttribute("readonly", false);
+            this.nameArea.readOnly = true;
         } else {
             modifyButton.classList.remove('btn-outline-success');
             modifyButton.classList.add('btn-success');
-            this.nameArea.setAttribute("readonly", true);
+            this.nameArea.readOnly = false;
         }
         this.modifyMode = !this.modifyMode;
     }

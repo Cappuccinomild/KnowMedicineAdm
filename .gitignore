@@ -180,3 +180,6 @@ migrations/
 
 # yolo_datase
 yolo_model/
+
+# model data
+runs/

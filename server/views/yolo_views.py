@@ -1,12 +1,16 @@
 from flask import Blueprint, url_for, render_template, flash, request, session, g, jsonify
-from flask import make_response
+from flask import make_response, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import redirect
 
 from server import db
 from server.forms import UserCreateForm, UserDetailForm
-from server.models import Img_set, Tag_set, Medicine, Check_log, ID_seq
+from server.models import Img_set, Tag_set, Medicine, Check_log, ID_seq, Model_list
 from server.views.auth_views import login_required
+
+from sqlalchemy import func
+
+import os
 
 def del_tag(img_id):
     # 사용 예시
@@ -26,9 +30,7 @@ def del_tag(img_id):
     except:
         img_path = "/static/image/default/"    
 
-    import os
     
-
 
     # img 폴더에 저장되어있던 이미지 파일을
     # dataset 폴더로 이동
@@ -48,7 +50,6 @@ def del_tag(img_id):
 
 def tag_to_txt(img_id):
         
-    import os
     # 사용 예시
     # /static/yolo_model/datasets/train/images/image-0.jpg
     # /static/image/202311/IMG_00005951_20231120_151321.png
@@ -131,12 +132,7 @@ def data_list():
     using_dataset = using_dataset.paginate(page=1, per_page=50)
 
     # 의약품 목록 추출
-    medicine_list = db.session.query(
-        Medicine.class_id,
-        Medicine.name
-    )
-
-    medicine_list_using = medicine_list.filter(Medicine.class_id != "").all()
+    medicine_list_using = Medicine.get_using()
 
     # 미사용 목록 추출
     
@@ -229,12 +225,7 @@ def data_tag():
 
     using_dataset = using_dataset.paginate(page=page, per_page=10)
 
-    medicine_list = db.session.query(
-        Medicine.class_id,
-        Medicine.name
-    )
-
-    medicine_list_using = medicine_list.filter(Medicine.class_id != "").all()
+    medicine_list_using = Medicine.get_using()
     # medicine_list_all = medicine_list.all()
 
     return render_template("model/data_tag.html", 
@@ -292,21 +283,143 @@ def data_detail(img_id):
     print(response_list)
     return response_list
     
+@bp.route("/data_learning/")
+@login_required
+def data_learning():
+    page = request.args.get("page", type=int, default=1)
 
-@bp.route("/learning/")
+    model_list = Model_list.query.paginate(page=page, per_page=10)
+    
+    return render_template("model/data_learning.html",
+                           current_menu="data_learning",
+                           model_list = model_list
+                           ) 
+
+
+@bp.route("/learning/", methods = ['POST'])
 @login_required
 def learning():
+    
     from ultralytics import YOLO
 
-    model = YOLO('./yolo_model/best.pt')
+    model = YOLO()
 
-    model.train(data='./yolo_model/data.yaml' , epochs=200, patience=50)
+    model_id = ID_seq.call_ID("MOD")
+
+    # yaml 파일 저장
+    yaml = open("./server/static/yolo_model/data.yaml", "w", encoding="utf-8")
     
-    return "complete"
+    # class_id 순서대로 정렬
+    using_list = sorted(Medicine.get_using(), key=lambda x: int(x[0]))
+
+    # 약품 이름만 추출
+    using_list = [item[1] for item in using_list]
+
+    yaml.write("\n".join([
+        "train: ./datasets/train",
+        "val: ./datasets/valid",
+        "",
+        f"nc: {len(using_list)}",
+        "",
+        f"names: {using_list}"
+    ]))
+
+    yaml.close()
+
+    result = model.train(data='./server/static/yolo_model/data.yaml' , epochs=1, patience=50,  project="server/static/yolo_model", name=model_id)
+    
+    # 새로운 파일 이름 생성
+    from datetime import datetime
+
+    pt_dir = str(result.save_dir)
+    pt_dir = f'./{pt_dir}/weights/best.pt'
+
+    # 평균 정확도
+    mean_rate = result.maps.mean()
+
+    # 클래스별 정확도 결과 리스트
+    maps = ",".join(str(value) for value in result.maps)
+
+    # DB 저장
+    Model_list.add_model(model_id, pt_dir, mean_rate, maps)
+
+    try:
+        resp = {
+            "resp" : 200,
+            "data" : result
+        }
+    except:
+        resp = {
+            "resp" : 400,
+            "data" : []
+        }
+
+    return jsonify(resp)
+
+def get_image_files(folder_path):
+    # 지원하는 이미지 파일 확장자들
+    supported_extensions = ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tif', '.tiff']
+
+    image_files = []
+
+    # 폴더 내 모든 파일에 대해 반복
+    for file_name in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, file_name)
+        _, file_extension = os.path.splitext(file_path)
+
+        # 파일이 지원하는 이미지 확장자 중 하나인지 확인
+        if file_extension.lower() in supported_extensions:
+            image_files.append(file_path)
+
+    return image_files
+
+@bp.route("/model_detail/<model_id>")
+@login_required
+def model_detail(model_id):
+    
+    print(model_id)
+    save_dir = Model_list.query.get(model_id).model_dir
+
+    save_dir = save_dir.replace("\\", "/")
+    save_dir = "/".join(save_dir.split("/")[:-2])
+    print(get_image_files(save_dir))
+    data = ["/"+"/".join(item.split("/")[2:]) for item in get_image_files(save_dir)]
+    try:
+        resp = {
+            "resp" : 200,
+            "data" : data
+        }
+    except:
+        resp = {
+            "resp" : 400,
+            "data" : []
+        }
+
+    return jsonify(resp)
+
 
 @bp.route("/model_update/", methods = ['POST'])
 @login_required
 def model_update():
+    
+    print(params)
+    if(request.method =='POST'):
+        model_id = params['model_id']
+        using = params['using']
+    
+    if using == "Y":
+        if db.session.query(func.count()).filter(Model_list.using == "Y").scalar() == 1:
+            return make_response("fail", 403)
+    
+    Model_list.update_model(model_id=model_id, using=using)
+
+    
+    
+    return make_response("success", 200)
+
+@bp.route("/model_delete/<model_id>", methods = ['POST'])
+@login_required
+def model_delete(model_id):
     
     return "complete"
 
@@ -336,7 +449,7 @@ def tag_save():
             "height": item['height'],
         })
         
-    Tag_set.query.filter(Tag_set.img_id == data['id']).delete()
+    Tag_set.del_tag_by_id(data['id'])
     
     db.session.commit()
 
@@ -356,7 +469,6 @@ def analysis_log():
     page = request.args.get("page", type=int, default=1)
     kw = request.args.get("kw", type=str, default="")
 
-    from sqlalchemy import func
 
     log_list = db.session.query(
         Check_log.img_id,
@@ -380,11 +492,7 @@ def analysis_log():
     log_list = log_list.paginate(page=page, per_page=10)
     # log_list = query.paginate(page=page, per_page=10)
     
-    medicine_list = db.session.query(
-        Medicine.class_id,
-        Medicine.name
-    )
-    medicine_list_using = medicine_list.filter(Medicine.class_id != "").all()
+    medicine_list_using = Medicine.get_using()
     
     # UTC 시각을 한국 시각으로 변환
     # for log in log_list.items:
@@ -421,7 +529,7 @@ def log_to_tag():
             "height": item['height'],
         })
 
-    Tag_set.query.filter(Tag_set.img_id == data['id']).delete()
+    Tag_set.del_tag_by_id(data['id'])
     
     db.session.commit()
 
@@ -483,7 +591,7 @@ def log_detail(img_id):
 @bp.route('/test/')
 def test():
     
-    import os
+    
     # 사용 예시
     head = './server'
     label_path = '/static/yolo_model/datasets/train/labels/'

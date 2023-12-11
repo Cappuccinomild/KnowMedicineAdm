@@ -72,6 +72,9 @@
                             수정
                         </button>
                         -->
+                        <button id="learning" onclick="learning();" type="button" class="btn btn-primary mb-3" style="float: right;">
+                            학습 시작
+                        </button>
                         <button id="saveY" onclick="dataChange('Y');" type="button" class="btn btn-primary mb-3" style="float: right;">
                             데이터 제거
                         </button>
@@ -246,6 +249,30 @@
             });
         });
     });
+
+    function learning(){
+        
+        fetch("/model/learning/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                now: "learning",
+                data: "data_list"
+            }),
+        }).then((data) => {
+            // 성공적으로 JSON 데이터를 받았을 때
+            console.log(data); // 받은 데이터를 로그에 출력
+            alert('모델 학습 완료.');
+            location.reload();
+        })
+        .catch((error) => {
+            // 오류가 발생했을 때
+            console.error('오류 발생:', error);
+            alert('저장에 실패했습니다. 다시 시도해주세요.');
+        });
+    }
 </script>
 <!-- <script type="module">
     import TagEditor from "{{ url_for('static', filename='cropper-tag.js') }}";

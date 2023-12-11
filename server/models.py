@@ -14,6 +14,13 @@ class Medicine(db.Model):
     caution_type = db.Column(db.String(2), nullable=False, comment = "코로나키트 K 일반약품 N")
     caution = db.Column(db.Text, nullable=True, comment = "주의사항")
 
+    def get_using():
+        using_list = db.session.query(
+            Medicine.class_id,
+            Medicine.name
+        )
+        return using_list.filter(Medicine.class_id != "").all()
+
 # 
 class User(db.Model):
     user_id = db.Column(db.String(12), primary_key=True, comment = "유저 ID")
@@ -207,3 +214,76 @@ class Tag_set(db.Model):
 
         # Commit the changes to the database
         db.session.commit()
+
+    def del_tag_by_id(img_id):
+        Tag_set.query.filter(Tag_set.img_id == img_id).delete()
+
+
+class Model_list(db.Model):
+    model_id = db.Column(db.String(12), primary_key=True, comment = "모델 ID")
+    model_dir = db.Column(db.Text, nullable=False, comment = "모델 저장 장소")
+    rate = db.Column(db.Float, nullable=True, comment = "분석 결과 평균 정확도")
+    maps = db.Column(db.Text, nullable=True, comment = "클래스별 정확도")
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, comment = "저장된 날짜")
+    using = db.Column(db.String(2), nullable=False, default = "N", comment = "모델 사용여부")
+
+    def add_model(model_id, model_dir, rate=None, maps=None):
+        
+        if not all([model_id, model_dir]):
+            raise ValueError("model id and directory are required for tagging.")
+
+        new_model = Model_list(
+            model_id = model_id,
+            model_dir = model_dir,
+            rate = rate,
+            maps = maps,
+            date = datetime.utcnow(),
+            using = "N"
+        )
+
+        db.session.add(new_model)
+        db.session.commit()
+
+    def update_model(model_id, model_dir=None, rate=None, date=None, maps=None, using=None):
+
+        
+        """
+        Update model data in the database.
+        """
+        # Query the existing model data by model_id
+        existing_model = Model_list.query.get(model_id)
+
+        # Check if the model_id exists
+        if not existing_model:
+            raise ValueError(f"Tag with tag_id {model_id} does not exist.")
+
+        # Update the tag data with new values if provided
+        if model_dir is not None:
+            existing_model.model_dir = model_dir
+        if rate is not None:
+            existing_model.rate = rate
+        if date is not None:
+            existing_model.date = date
+        if using is not None:
+            existing_model.using = using
+
+        if maps is not None:
+            existing_model.maps = maps
+
+        # Commit the changes to the database
+        db.session.commit()
+
+    def del_model(model_id, model_dir=None, rate=None, date=None, using=None):
+        """
+        delete model data in the database.
+        """
+        # Query the existing model data by model_id
+        model = Model_list.query.get(model_id)
+
+        pt_dir = model.model_dir
+
+        db.session.delete(model)
+        db.session.commit()
+
+        return pt_dir
+        
