@@ -24,6 +24,8 @@ def PIL2OpenCV(pil_image):
     
     return cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
 
+# xy xy 좌표로 이루어진 직사각형을
+# 좌측 상단 xy 좌표와 width, height 좌표로 변환
 def xyxy_to_xywh(xyxy, img):
 
     img_y, img_x, rgb = img.shape
