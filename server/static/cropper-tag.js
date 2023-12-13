@@ -4,6 +4,7 @@ class TagEditor {
         this.saveLink = saveLink;
         this.tagList = [];
         this.imgSize;
+        this.selectedRow = null;
         
         this.buttonBox = document.getElementById('btn_layer');
 
@@ -80,6 +81,15 @@ class TagEditor {
     handleRowClick(event) {
         const imgId = event.currentTarget.getAttribute('data-imgId');
 
+        // 기존 클릭한 행에 대한 클래스 제거
+        if (this.selectedRow) {
+            this.selectedRow.classList.remove('table-active');
+        }
+
+        // 현재 클릭한 행에 대한 클래스 추가
+        this.selectedRow = event.currentTarget;
+        this.selectedRow.classList.add('table-active');
+        
         fetch(`${this.fetchLink}${imgId}`)
             .then(response => response.json())
             .then(data => {
