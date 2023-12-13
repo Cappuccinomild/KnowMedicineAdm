@@ -420,23 +420,28 @@ def model_detail(model_id):
     return jsonify(resp)
 
 # 미사용 중인 모델을 사용으로 변경
-# 현재 사이트에 적용은 되어있지 않으며
-# api_views에서도 using Y인 모델을 불러오도록 업데이트 필요
 @bp.route("/model_update/", methods = ['POST'])
 @login_required
 def model_update():
     
-    print(params)
+    data = request.get_json()
     if(request.method =='POST'):
-        model_id = params['model_id']
-        using = params['using']
+        model_id = data['model_id']
+        using = data['using']
     
+    
+
     # 이미 사용중일 경우 처리
     if using == "Y":
         if db.session.query(func.count()).filter(Model_list.using == "Y").scalar() == 1:
             return make_response("fail", 403)
 
     # 업데이트    
+    for now_using in Model_list.query.filter(Model_list.using == "Y").all():
+        now_using.using="N"
+    
+    db.session.commit()
+    
     Model_list.update_model(model_id=model_id, using="Y")
     
     return make_response("success", 200)

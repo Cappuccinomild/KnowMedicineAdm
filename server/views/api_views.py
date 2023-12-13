@@ -6,6 +6,8 @@ from flask import Response
 from flask import make_response
 from flask import redirect, url_for, send_from_directory, render_template
 
+from server.models import Model_list
+
 # JWT 확장 라이브러리
 from flask_jwt_extended import *
 
@@ -40,7 +42,9 @@ def xyxy_to_xywh(xyxy, img):
 # 이미지 분석, 로그저장
 def yolo_img_predict(id, img):
     
-    yolo_model = YOLO("../img_model.pt")
+    model_dir = Model_list.query.filter(Model_list.using=="Y").first().model_dir
+    print(model_dir)
+    yolo_model = YOLO(model_dir)
 
     results = yolo_model(img)
 

@@ -56,8 +56,11 @@
                 <button id="modify" type="button" class="btn btn-outline-success" style="float: right;">
                     수정
                 </button> -->
-                <button id="addTag" onclick="learning()" type="button" class="btn btn-primary mb-3" style="float: right;">
+                <button id="learning" onclick="learning()" type="button" class="btn btn-primary mb-3" style="float: right;">
                     신규 학습
+                </button>
+                <button id="change" onclick="updateYn()" type="button" class="btn btn-primary mb-3" style="float: right;">
+                    모델 변경
                 </button>
             </div>
         </div>
@@ -189,6 +192,8 @@
         },
 
     });
+
+    let selectedRow = null;
     
     //이미지
     const rows = document.querySelectorAll('tr[data-modId]');
@@ -199,6 +204,16 @@
         row.addEventListener('click', async function(){
             const modId = event.currentTarget.getAttribute('data-modId');
 
+            // 이전에 선택한 행의 스타일 초기화
+            if (selectedRow) {
+                selectedRow.classList.remove('table-active');
+            }
+
+            // 현재 클릭한 행에 새로운 스타일 적용
+            selectedRow = row;
+            selectedRow.classList.add('table-active');
+
+            
             fetch(`/model/model_detail/${modId}`)
             .then(response => response.json())
             .then(data => {
@@ -238,6 +253,36 @@
             alert('저장에 실패했습니다. 다시 시도해주세요.');
         });
     }
+
+    function updateYn(){
+        if (selectedRow){
+            fetch("/model/model_update/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                model_id: selectedRow.children[1].textContent,
+                using: selectedRow.children[2].textContent
+            }),
+        }).then((data) => {
+            // 성공적으로 JSON 데이터를 받았을 때
+            console.log(data); // 받은 데이터를 로그에 출력
+            alert('모델 변경 완료.');
+            location.reload();
+        })
+        .catch((error) => {
+            // 오류가 발생했을 때
+            console.error('오류 발생:', error);
+            alert('저장에 실패했습니다. 다시 시도해주세요.');
+        });
+        }
+        
+        else{
+            alert("모델을 선택해주세요");
+        }
+    }
+
 
 </script>
 
