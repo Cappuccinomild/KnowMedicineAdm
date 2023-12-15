@@ -183,3 +183,6 @@ yolo_model/
 
 # model data
 runs/
+
+# config
+config.py
