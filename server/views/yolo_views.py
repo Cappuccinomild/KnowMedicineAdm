@@ -372,6 +372,12 @@ def learning():
             "data" : []
         }
 
+    # 'useYn'이 'Y'인 레코드를 선택하고 'train_cnt'를 1씩 증가시킴
+    db.session.query(Img_set).filter_by(useYn='Y').update({'train_cnt': Img_set.train_cnt + 1}, synchronize_session=False)
+
+    # 변경 내용을 데이터베이스에 반영
+    db.session.commit()
+    
     return jsonify(resp)
 
 # 폴더 내부의 이미지 파일 목록 추출
